@@ -31,31 +31,30 @@ program en234fea
 !  open (UNIT = IOW, FILE = outfil, STATUS = 'unknown', ERR=500)
 
 
-!  None of the files below will work until you write the codes that will use them!
 !
 !  Homework 3
 !  Basic 2 element test (one or two elements)
-  infil = './input_files/Linear_elastic_2d.in'
+  infil = '.\input_files\Linear_elastic_2d.in'
   open (unit = IOR, file = infil, status = 'old', ERR=500)
-  outfil = './Output_files/Linear_elastic_2d.out'
+  outfil = '.\Output_files\Linear_elastic_2d.out'
   open (UNIT = IOW, FILE = outfil, STATUS = 'unknown', ERR=500)
 
 ! Homework 3, Basic 2D linear elasticity with different element types.
-!  infil = './input_files/holeplate_2d_tri3.in'
+!  infil = '.\input_files\holeplate_2d_tri3.in'
 !  open (unit = IOR, file = infil, status = 'old', ERR=500)
-!  outfil = './Output_files/holeplate_2d_tri3.out'
+!  outfil = '.\Output_files\holeplate_2d_tri3.out'
 !  open (unit = IOR, file = infil, status = 'old', ERR=500)
-!  infil = './input_files/holeplate_2d_tri6.in'
+!  infil = '.\input_files\holeplate_2d_tri6.in'
 !  open (unit = IOR, file = infil, status = 'old', ERR=500)
-!  outfil = './Output_files/holeplate_2d_tri6.out'
+!  outfil = '.\Output_files\holeplate_2d_tri6.out'
 !  open (UNIT = IOW, FILE = outfil, STATUS = 'unknown', ERR=500)
-!  infil = './input_files/holeplate_2d_quad4.in'
+!  infil = '.\input_files\holeplate_2d_quad4.in'
 !  open (unit = IOR, file = infil, status = 'old', ERR=500)
-!  outfil = './Output_files/holeplate_2d_quad4.out'
+!  outfil = '.\Output_files\holeplate_2d_quad4.out'
 !  open (UNIT = IOW, FILE = outfil, STATUS = 'unknown', ERR=500)
-!  infil = './input_files/holeplate_2d_quad8.in'
+!  infil = '.\input_files\holeplate_2d_quad8.in'
 !  open (unit = IOR, file = infil, status = 'old', ERR=500)
-!  outfil = './Output_files/holeplate_2d_quad8.out'
+!  outfil = '.\Output_files\holeplate_2d_quad8.out'
 !  open (UNIT = IOW, FILE = outfil, STATUS = 'unknown', ERR=500)
 !
 

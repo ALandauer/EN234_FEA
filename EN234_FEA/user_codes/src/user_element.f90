@@ -65,7 +65,7 @@ subroutine user_element_static(lmn, element_identifier, n_nodes, node_property_l
     updated_state_variables,element_stiffness,element_residual, fail)      ! Output variables
 
 
-    else if ( element_identifier ==0) then           ! Stub for a new element
+    else if ( element_identifier == 101) then           ! Stub for a new element
   
         call el_linelast_2dbasic(lmn, element_identifier, n_nodes, node_property_list, &           ! Input variables
     n_properties, element_properties, element_coords, length_coord_array, &                      ! Input variables
@@ -83,7 +83,8 @@ subroutine user_element_static(lmn, element_identifier, n_nodes, node_property_l
 99001 format ( // ' **** ERROR DETECTED IN SUBROUTINE user_element_static ****'/  &
         '   Invalid element type was specified '/, &
         '   Current element types are: '/  &
-        '     IEP=1001     Basic fully integrated 3D linear elastic element       '/&
+        '     IEP=1001     Basic fully integrated 2D linear elastic element       '/&
+        '     IEP=101      Basic fully integrated 2D linear elastic element       '/&
         '    Subroutine called with IEP = ', I10)
 
 end subroutine user_element_static
@@ -148,7 +149,7 @@ subroutine user_element_dynamic(lmn, element_identifier, n_nodes, node_property_
             updated_state_variables,element_residual,element_deleted)                                      ! Output variables
 
 
-    else if ( element_identifier ==0) then               ! Stub for a new element
+    else if ( element_identifier == 101) then               ! Stub for a new element
   
         call el_linelast_2dbasic(lmn, element_identifier, n_nodes, node_property_list, &           ! Input variables
             n_properties, element_properties,element_coords, length_coord_array, &                         ! Input variables
@@ -166,6 +167,7 @@ subroutine user_element_dynamic(lmn, element_identifier, n_nodes, node_property_
         '   Invalid element type was specified '/, &
         '   Current element types are: '/  &
         '     IEP=1001     Basic fully integrated 3D linear elastic element       '/&
+        '     IEP=101      Basic fully integrated 2D linear elastic element       '/&
         '    Subroutine called with IEP = ', I10)
 
 end subroutine user_element_dynamic
@@ -224,8 +226,8 @@ subroutine user_element_fieldvariables(lmn, element_identifier, n_nodes, node_pr
             n_field_variables,field_variable_names, &                                                   ! Field variable definition
             nodal_fieldvariables)      ! Output variables
 
-        else if ( element_identifier == 0 ) then
-            call new_user_element_fieldvariables(lmn, element_identifier, n_nodes, node_property_list, &           ! Input variables
+        else if ( element_identifier == 101 ) then
+            call fieldvars_linelast_2dbasic(lmn, element_identifier, n_nodes, node_property_list, &           ! Input variables
                 n_properties, element_properties,element_coords, length_coord_array, &                                   ! Input variables
                 dof_increment, dof_total, length_dof_array, &                                                            ! Input variables
                 n_state_variables, initial_state_variables,updated_state_variables, &                                    ! Input variables
@@ -241,6 +243,7 @@ subroutine user_element_fieldvariables(lmn, element_identifier, n_nodes, node_pr
         '   Invalid element type was specified '/, &
         '   Current element types are: '/  &
         '     IEP=1001     Basic fully integrated 3D linear elastic element       '/&
+        '     IEP=101      Basic fully integrated 2D linear elastic element       '/&
         '    Subroutine called with IEP = ', I10)
 
 

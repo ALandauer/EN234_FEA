@@ -35,9 +35,9 @@ program en234fea
 !
 !  Homework 3
 !  Basic 2 element test (one or two elements)
-  infil = './input_files/linear_elastic_2d.in'
+  infil = './input_files/Linear_elastic_2d.in'
   open (unit = IOR, file = infil, status = 'old', ERR=500)
-  outfil = './Output_files/linear_elastic_2d.out'
+  outfil = './Output_files/Linear_elastic_2d.out'
   open (UNIT = IOW, FILE = outfil, STATUS = 'unknown', ERR=500)
 
 ! Homework 3, Basic 2D linear elasticity with different element types.

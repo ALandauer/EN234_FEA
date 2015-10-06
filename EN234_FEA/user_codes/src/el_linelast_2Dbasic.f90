@@ -106,9 +106,9 @@ subroutine el_linelast_2dbasic(lmn, element_identifier, n_nodes, node_property_l
         call invert_small(dxdxi,dxidx,determinant)
         dNdx(1:n_nodes,1:2) = matmul(dNdxi(1:n_nodes,1:2),dxidx)
         B = 0.d0
-        B(1,1:2*n_nodes-2:2) = dNdx(1:n_nodes,1)
-        B(2,2:2*n_nodes-1:2) = dNdx(1:n_nodes,2)
-!        B(3,3:3*n_nodes:3)   = dNdx(1:n_nodes,3)
+        B(1,1:2*n_nodes-2:3) = dNdx(1:n_nodes,1)
+        B(2,2:2*n_nodes-1:3) = dNdx(1:n_nodes,2)
+!        B(3,3:2*n_nodes:2)   = dNdx(1:n_nodes,3)
 !        B(4,1:3*n_nodes-2:3) = dNdx(1:n_nodes,2)
 !        B(4,2:3*n_nodes-1:3) = dNdx(1:n_nodes,1)
 !        B(5,1:3*n_nodes-2:3) = dNdx(1:n_nodes,3)
@@ -119,14 +119,11 @@ subroutine el_linelast_2dbasic(lmn, element_identifier, n_nodes, node_property_l
         strain = matmul(B,dof_total)
         dstrain = matmul(B,dof_increment)
       
-      write(6,*) 'D =', D
-      write(6,*) 'B =', B
-
         stress = matmul(D,strain+dstrain)
         element_residual(1:2*n_nodes) = element_residual(1:2*n_nodes) - matmul(transpose(B),stress)*w(kint)*determinant
 
         element_stiffness(1:2*n_nodes,1:2*n_nodes) = element_stiffness(1:2*n_nodes,1:2*n_nodes) &
-            + matmul(transpose(B(1:2,1:2*n_nodes)),matmul(D,B(1:2,1:2*n_nodes)))*w(kint)*determinant
+            + matmul(transpose(B(1:3,1:2*n_nodes)),matmul(D,B(1:3,1:2*n_nodes)))*w(kint)*determinant
 
     end do
   
@@ -233,8 +230,8 @@ subroutine el_linelast_2dbasic_dynamic(lmn, element_identifier, n_nodes, node_pr
         call invert_small(dxdxi,dxidx,determinant)
         dNdx(1:n_nodes,1:2) = matmul(dNdxi(1:n_nodes,1:2),dxidx)
         B = 0.d0
-        B(1,1:2*n_nodes-2:2) = dNdx(1:n_nodes,1)
-        B(2,2:2*n_nodes-1:2) = dNdx(1:n_nodes,2)
+        B(1,1:2*n_nodes-2:3) = dNdx(1:n_nodes,1)
+        B(2,2:2*n_nodes-1:3) = dNdx(1:n_nodes,2)
 !        B(3,3:3*n_nodes:3)   = dNdx(1:n_nodes,3)
 !        B(4,1:3*n_nodes-2:3) = dNdx(1:n_nodes,2)
 !        B(4,2:3*n_nodes-1:3) = dNdx(1:n_nodes,1)
@@ -359,8 +356,8 @@ subroutine fieldvars_linelast_2dbasic(lmn, element_identifier, n_nodes, node_pro
         call invert_small(dxdxi,dxidx,determinant)
         dNdx(1:n_nodes,1:2) = matmul(dNdxi(1:n_nodes,1:2),dxidx)
         B = 0.d0
-        B(1,1:2*n_nodes-2:2) = dNdx(1:n_nodes,1)
-        B(2,2:2*n_nodes-1:2) = dNdx(1:n_nodes,2)
+        B(1,1:2*n_nodes-2:3) = dNdx(1:n_nodes,1)
+        B(2,2:2*n_nodes-1:3) = dNdx(1:n_nodes,2)
 !        B(3,3:3*n_nodes:3)   = dNdx(1:n_nodes,3)
 !        B(4,1:3*n_nodes-2:3) = dNdx(1:n_nodes,2)
 !        B(4,2:3*n_nodes-1:3) = dNdx(1:n_nodes,1)

@@ -9211,7 +9211,7 @@
          SOLVER, DIRECT, NONLINEAR, 1.d-05,15, UNSYMMETRIC
 
 
-         PRINT STATE, Output_files\contourplots.dat
+         PRINT STATE, Output_files\contourplots_Cahn_2d_fine.dat
             DEGREES OF FREEDOM
          END PRINT STATE
 

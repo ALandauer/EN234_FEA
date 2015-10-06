@@ -1571,9 +1571,9 @@
 %         The projected states are controlled by the user - see subroutine elstat in file usrelem.f90
 %         Also (for this example file) subroutine state_linelast_3dbasic in file el_linelast_3Dbasic.f90
 %         In this example the states are the stresses sxx,syy,szz,sxy,sxz,syz
-         PRINT STATE, Output_files\contourplots.dat
+         PRINT STATE, Output_files\contourplots_hole_tri6.dat
             DEGREES OF FREEDOM
-            FIELD VARIABLES, S11,S22,S33,S12
+            FIELD VARIABLES, S11,S22,S12
             DISPLACED MESH
             DISPLACEMENT SCALE FACTOR, 1.d0
          END PRINT STATE

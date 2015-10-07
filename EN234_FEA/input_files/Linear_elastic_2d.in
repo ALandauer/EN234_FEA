@@ -11,7 +11,7 @@
 
 %    The NODE command defines properties of the nodes.  
 %    The parameters are # of coords, # of DOF, and an optional integer identifier
-       NODES
+       NODES, 2, 2, 1
 %    The parameters are # of coords, # of DOF, and an optional integer identifier
        PARAMETERS, 2, 2, 1
 %      Specify which nodal DOF are displacements.  In the example, DOF 1 is the x displacement, 2 is the y displacement, 3 is the z displacement
@@ -19,24 +19,24 @@
 %    Enter x,y,z coords of nodes.   The node number is optional, and is ignored in the code.
          COORDINATES
 %  Coords for 8 noded element
-         1,  0.d0, 0.d0
-         2,  1.d0, 0.d0
-         3,  2.d0, 0.d0
-         4,  2.d0, 1.d0
-         5,  2.d0, 2.d0
-         6,  1.d0, 2.d0
-         7,  0.d0, 2.d0
-         8,  0.d0, 1.d0
+       %  1,  0.d0, 0.d0
+      %   2,  1.d0, 0.d0
+     %    3,  2.d0, 0.d0
+    %     4,  2.d0, 1.d0
+   %      5,  2.d0, 2.d0
+  %       6,  1.d0, 2.d0
+ %        7,  0.d0, 2.d0
+%         8,  0.d0, 1.d0
 % Coords for two 6 noded triangles
-%         1, 0.d0, 0.d0
-%         2, 1.d0, 0.d0
-%         3, 2.d0, 0.d0
-%         4, 0.d0, 1.d0
-%         5, 1.d0, 1.d0
-%         6, 2.d0, 1.d0
-%         7, 0.d0, 2.d0
-%         8, 1.d0, 2.d0
-%         9, 2.d0, 2.d0
+         1, 0.d0, 0.d0
+         2, 1.d0, 0.d0
+         3, 2.d0, 0.d0
+         4, 0.d0, 1.d0
+         5, 1.d0, 1.d0
+         6, 2.d0, 1.d0
+         7, 0.d0, 2.d0
+         8, 1.d0, 2.d0
+         9, 2.d0, 2.d0
         END COORDINATES
       END NODES
 %
@@ -44,7 +44,7 @@
 %     The parameters are no. nodes on the element,  total no. state variables, integer identifier
 
       ELEMENTS
-        PARAMETERS, 8, 0, 101
+        PARAMETERS, 6, 0, 101
 %       Define element properties - the values are passed to user subroutine elstif in the order they are listed here
 %       For the example provided, the params are Youngs Modulus, Poissons ratio
         PROPERTIES
@@ -56,9 +56,9 @@
 %     The element number (first number in the list) is optional, and is ignored in the code
         CONNECTIVITY, zone1
 %  Uncomment lines below for 6 noded triangles, and comment out the 8 noded connectivity
-%     1,     1, 3, 9, 2, 6, 5   
-%     2,     1, 9, 7, 5, 8, 4
-    1,     1, 3, 5, 7, 2, 4, 6, 8
+     1,     1, 3, 9, 2, 6, 5   
+     2,     1, 9, 7, 5, 8, 4
+%    1,     1, 3, 5, 7, 2, 4, 6, 8
         END CONNECTIVITY
 
 %     The PROPERTIES, PARAMETERS, CONNECTIVITY keywords can be repeated here to define more set of elements with different properties
@@ -80,10 +80,10 @@
  
 %       The NODESET key defines a list of nodes
         NODESET, left
-           1, 7, 8
+           1, 4, 7
         END NODESET
         NODESET, right
-           3, 4, 5
+           3, 6, 9
         END NODESET
         NODESET, base
            1, 2, 3
@@ -96,6 +96,7 @@
 %      The ELEMENTSET key defines a list of elements
        ELEMENTSET, end_element
            1
+           2
        END ELEMENTSET
 
 %       The DEGREE OF FREEDOM key assigns values to nodal DOFs
@@ -103,8 +104,10 @@
 %     
         DEGREES OF FREEDOM
            left, 1, VALUE, 0.d0
+           left, 2, VALUE, 0.d0
            right, 1, HISTORY, dof_history
-           base, 2, VALUE, 0.d0
+%          base, 2, VALUE, 0.d0
+%          base, 1, VALUE, 0.d0
         END DEGREES OF FREEDOM
 
 
@@ -151,7 +154,7 @@
 %                        UNSYMMETRIC  (optional - only for unsymmetric stiffness)
 
 
-         SOLVER, DIRECT, NONLINEAR, 1.d-05,15
+         SOLVER, DIRECT, LINEAR, 1.d-05,15
 
 
 %      This prints the DOF values and projected nodal state for all solid elements to a tecplot readable file
@@ -159,10 +162,10 @@
 %         X, Y, (Z), Ux, Uy, (Uz), Projected states.
 %         The projected states are controlled by the user - see subroutine elstat in file usrelem.f90
 %         Also (for this example file) subroutine state_linelast_3dbasic in file el_linelast_3Dbasic.f90
-%         In this example the states are the stresses sxx,syy,szz,sxy,sxz,syz
+%         In this example the states are the stresses sxx,syy,sxy
          PRINT STATE, Output_files\contourplots_basic_2d.dat
             DEGREES OF FREEDOM
-            FIELD VARIABLES, S11,S22,S33,S12
+            FIELD VARIABLES, S11,S22,S12
             DISPLACED MESH
             DISPLACEMENT SCALE FACTOR, 1.d0
          END PRINT STATE

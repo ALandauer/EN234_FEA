@@ -1996,7 +1996,7 @@
 %       The HISTORY key defines a time history that can be applied to DOFs or distributed loads
         HISTORY, dof_history
           0.d0, 0.d0                  % Each line gives a time value and then a function value
-          1.d0, -0.29d0
+          1.d0, -.2d0
         END HISTORY
 
  

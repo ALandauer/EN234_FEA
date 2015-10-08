@@ -72,11 +72,14 @@
       BOUNDARY CONDITIONS
 
 %       The HISTORY key defines a time history that can be applied to DOFs or distributed loads
-        HISTORY, dof_history
+        HISTORY, dof_history1
           0.d0, 0.d0                  % Each line gives a time value and then a function value
          10.d0, 1.d0
         END HISTORY
-
+        HISTORY, dof_history2
+          0.d0, 0.d0                  % Each line gives a time value and then a function value
+         10.d0, -1.d0
+        END HISTORY
  
 %       The NODESET key defines a list of nodes
         NODESET, left
@@ -103,9 +106,9 @@
 %       The syntax is node set name, DOF number, VALUE/HISTORY/SUBROUTINE, value/history name/subroutine parameter list name.
 %     
         DEGREES OF FREEDOM
-           left, 1, VALUE, 0.d0
-           left, 2, VALUE, 0.d0
-           right, 1, HISTORY, dof_history
+           left, 1, HISTORY, dof_history2
+          % left, 2, VALUE, 0.d0
+           right, 1, HISTORY, dof_history1
 %          base, 2, VALUE, 0.d0
 %          base, 1, VALUE, 0.d0
         END DEGREES OF FREEDOM

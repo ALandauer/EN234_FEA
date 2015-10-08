@@ -63,7 +63,7 @@ subroutine el_linelast_2dbasic(lmn, element_identifier, n_nodes, node_property_l
     real (prec)  ::  B(3,length_dof_array)             ! strain = B*(dof_total+dof_increment)
     real (prec)  ::  dxidx(2,2), determinant           ! Jacobian inverse and determinant
     real (prec)  ::  x(2,length_coord_array/2)         ! Re-shaped coordinate array x(i,a) is ith coord of ath node
-    real (prec)  ::  E, xnu, D44, D11, D12              ! Material properties
+    real (prec)  ::  E, xnu, D33, D11, D12              ! Material properties
     !
     !     Subroutine to compute element stiffness matrix and residual force vector for 2D linear elastic elements
     !     El props are:
@@ -88,13 +88,13 @@ subroutine el_linelast_2dbasic(lmn, element_identifier, n_nodes, node_property_l
     D = 0.d0
     E = element_properties(1)
     xnu = element_properties(2)
-!    d44 = 0.5D0*E/(1+xnu)
     d11 = (1.D0-xnu)*E/( (1+xnu)*(1-2.D0*xnu) )
     d12 = xnu*E/( (1+xnu)*(1-2.D0*xnu) )
+    d33 = (1.D0-2*xnu)*E/( 2*(1+xnu)*(1-2.D0*xnu) )
     D(1:2,1:2) = d12
     D(1,1) = d11
     D(2,2) = d11
-    D(3,3) = d11
+    D(3,3) = d33
 !    D(4,4) = d44
 !    D(5,5) = d44
 !    D(6,6) = d44
@@ -205,7 +205,7 @@ subroutine el_linelast_2dbasic_dynamic(lmn, element_identifier, n_nodes, node_pr
     real (prec)  ::  B(3,length_dof_array)             ! strain = B*(dof_total+dof_increment)
     real (prec)  ::  dxidx(2,2), determinant           ! Jacobian inverse and determinant
     real (prec)  ::  x(2,length_coord_array/2)         ! Re-shaped coordinate array x(i,a) is ith coord of ath node
-    real (prec)  :: E, xnu, D44, D11, D12              ! Material properties
+    real (prec)  :: E, xnu, D33, D11, D12              ! Material properties
     !
     !     Subroutine to compute element force vector for a linear elastodynamic problem
     !     El props are:
@@ -227,13 +227,13 @@ subroutine el_linelast_2dbasic_dynamic(lmn, element_identifier, n_nodes, node_pr
     D = 0.d0
     E = element_properties(1)
     xnu = element_properties(2)
-    d44 = 0.5D0*E/(1+xnu) 
     d11 = (1.D0-xnu)*E/( (1+xnu)*(1-2.D0*xnu) )
     d12 = xnu*E/( (1+xnu)*(1-2.D0*xnu) )
+    d33 = (1.D0-2*xnu)*E/( 2*(1+xnu)*(1-2.D0*xnu) )
     D(1:2,1:2) = d12
     D(1,1) = d11
     D(2,2) = d11
-    D(3,3) = d11
+    D(3,3) = d33
 !    D(4,4) = d44
 !    D(5,5) = d44
 !    D(6,6) = d44
@@ -259,7 +259,8 @@ subroutine el_linelast_2dbasic_dynamic(lmn, element_identifier, n_nodes, node_pr
 !        B(3,6) = dNdx(3,1)
         B(1,1:2*n_nodes-2:2) = dNdx(1:n_nodes,1)
         B(2,2:2*n_nodes-1:2) = dNdx(1:n_nodes,2)
-        B(3,1:2*n_nodes:1) = dNdx(1:n_nodes,3)
+        B(3,1:2*n_nodes-2:2) = dNdx(1:n_nodes,2)
+        B(3,2:2*n_nodes-1:2) = dNdx(1:n_nodes,1)
 !        B(1,1:2*n_nodes-2:2) = dNdx(1:n_nodes,1)
 !        B(2,2:2*n_nodes-1:2) = dNdx(1:n_nodes,2)
 !        B(3,1:2*n_nodes:3)   = dNdx(1:n_nodes,1)
@@ -346,7 +347,7 @@ subroutine fieldvars_linelast_2dbasic(lmn, element_identifier, n_nodes, node_pro
     real (prec)  ::  B(3,length_dof_array)             ! strain = B*(dof_total+dof_increment)
     real (prec)  ::  dxidx(2,2), determinant           ! Jacobian inverse and determinant
     real (prec)  ::  x(2,length_coord_array/2)         ! Re-shaped coordinate array x(i,a) is ith coord of ath node
-    real (prec)  :: E, xnu, D44, D11, D12              ! Material properties
+    real (prec)  :: E, xnu, D33, D11, D12              ! Material properties
     real (prec)  :: p, smises                          ! Pressure and Mises stress
     !
     !     Subroutine to compute element contribution to project element integration point data to nodes
@@ -368,13 +369,13 @@ subroutine fieldvars_linelast_2dbasic(lmn, element_identifier, n_nodes, node_pro
     D = 0.d0
     E = element_properties(1)
     xnu = element_properties(2)
-    d44 = 0.5D0*E/(1+xnu) 
     d11 = (1.D0-xnu)*E/( (1+xnu)*(1-2.D0*xnu) )
     d12 = xnu*E/( (1+xnu)*(1-2.D0*xnu) )
+    d33 = (1.D0-2*xnu)*E/( 2*(1+xnu)*(1-2.D0*xnu) )
     D(1:2,1:2) = d12
     D(1,1) = d11
     D(2,2) = d11
-    D(3,3) = d11
+    D(3,3) = d33
 !    D(4,4) = d44
 !    D(5,5) = d44
 !    D(6,6) = d44
@@ -400,7 +401,8 @@ subroutine fieldvars_linelast_2dbasic(lmn, element_identifier, n_nodes, node_pro
 !        B(3,6) = dNdx(3,1)
         B(1,1:2*n_nodes-2:2) = dNdx(1:n_nodes,1)
         B(2,2:2*n_nodes-1:2) = dNdx(1:n_nodes,2)
-        B(3,1:2*n_nodes:1) = dNdx(1:n_nodes,3)
+        B(3,1:2*n_nodes-2:2) = dNdx(1:n_nodes,2)
+        B(3,2:2*n_nodes-1:2) = dNdx(1:n_nodes,1)
 !        B(1,1:2*n_nodes-2:2) = dNdx(1:n_nodes,1)
 !        B(2,2:2*n_nodes-1:2) = dNdx(1:n_nodes,2)
 !        B(3,3:2*n_nodes:3)   = dNdx(1:n_nodes,2)

@@ -95,9 +95,6 @@ subroutine el_linelast_2dbasic(lmn, element_identifier, n_nodes, node_property_l
     D(1,1) = d11
     D(2,2) = d11
     D(3,3) = d33
-!    D(4,4) = d44
-!    D(5,5) = d44
-!    D(6,6) = d44
   
     !     --  Loop over integration points
     do kint = 1, n_points
@@ -106,30 +103,11 @@ subroutine el_linelast_2dbasic(lmn, element_identifier, n_nodes, node_property_l
         call invert_small(dxdxi,dxidx,determinant)
         dNdx(1:n_nodes,1:2) = matmul(dNdxi(1:n_nodes,1:2),dxidx)
         B = 0.d0
-!        B(1,1) = dNdx(1,1)
-!        B(1,3) = dNdx(2,1)
-!        B(1,5) = dNdx(3,1)
-!        B(2,2) = dNdx(1,2)
-!        B(2,4) = dNdx(2,2)
-!        B(2,6) = dNdx(3,2)
-!        B(3,1) = dNdx(1,2)
-!        B(3,2) = dNdx(1,1)
-!        B(3,3) = dNdx(2,2)
-!        B(3,4) = dNdx(2,1)
-!        B(3,5) = dNdx(3,2)
-!        B(3,6) = dNdx(3,1)
+
         B(1,1:2*n_nodes-2:2) = dNdx(1:n_nodes,1)
         B(2,2:2*n_nodes-1:2) = dNdx(1:n_nodes,2)
         B(3,1:2*n_nodes-2:2) = dNdx(1:n_nodes,2)
         B(3,2:2*n_nodes-1:2) = dNdx(1:n_nodes,1)
-!        B(2,2:2*n_nodes-1:2) = dNdx(1:n_nodes,2)
-!        B(3,1:2*n_nodes-3:2)   = dNdx(1:n_nodes,1)
-!        B(4,1:3*n_nodes-2:3) = dNdx(1:n_nodes,2)
-!        B(4,2:3*n_nodes-1:3) = dNdx(1:n_nodes,1)
-!        B(5,1:3*n_nodes-2:3) = dNdx(1:n_nodes,3)
-!        B(5,3:3*n_nodes:3)   = dNdx(1:n_nodes,1)
-!        B(6,2:3*n_nodes-1:3) = dNdx(1:n_nodes,3)
-!        B(6,3:3*n_nodes:3)   = dNdx(1:n_nodes,2)
 
         strain = matmul(B,dof_total)
         dstrain = matmul(B,dof_increment)
@@ -205,7 +183,7 @@ subroutine el_linelast_2dbasic_dynamic(lmn, element_identifier, n_nodes, node_pr
     real (prec)  ::  B(3,length_dof_array)             ! strain = B*(dof_total+dof_increment)
     real (prec)  ::  dxidx(2,2), determinant           ! Jacobian inverse and determinant
     real (prec)  ::  x(2,length_coord_array/2)         ! Re-shaped coordinate array x(i,a) is ith coord of ath node
-    real (prec)  :: E, xnu, D33, D11, D12              ! Material properties
+    real (prec)  ::  E, xnu, D33, D11, D12              ! Material properties
     !
     !     Subroutine to compute element force vector for a linear elastodynamic problem
     !     El props are:
@@ -245,31 +223,11 @@ subroutine el_linelast_2dbasic_dynamic(lmn, element_identifier, n_nodes, node_pr
         call invert_small(dxdxi,dxidx,determinant)
         dNdx(1:n_nodes,1:2) = matmul(dNdxi(1:n_nodes,1:2),dxidx)
         B = 0.d0
-!        B(1,1) = dNdx(1,1)
-!        B(1,3) = dNdx(2,1)
-!        B(1,5) = dNdx(3,1)
-!        B(2,2) = dNdx(1,2)
-!        B(2,4) = dNdx(2,2)
-!        B(2,6) = dNdx(3,2)
-!        B(3,1) = dNdx(1,2)
-!        B(3,2) = dNdx(1,1)
-!        B(3,3) = dNdx(2,2)
-!        B(3,4) = dNdx(2,1)
-!        B(3,5) = dNdx(3,2)
-!        B(3,6) = dNdx(3,1)
         B(1,1:2*n_nodes-2:2) = dNdx(1:n_nodes,1)
         B(2,2:2*n_nodes-1:2) = dNdx(1:n_nodes,2)
         B(3,1:2*n_nodes-2:2) = dNdx(1:n_nodes,2)
         B(3,2:2*n_nodes-1:2) = dNdx(1:n_nodes,1)
-!        B(1,1:2*n_nodes-2:2) = dNdx(1:n_nodes,1)
-!        B(2,2:2*n_nodes-1:2) = dNdx(1:n_nodes,2)
-!        B(3,1:2*n_nodes:3)   = dNdx(1:n_nodes,1)
-!        B(4,1:3*n_nodes-2:3) = dNdx(1:n_nodes,2)
-!        B(4,2:3*n_nodes-1:3) = dNdx(1:n_nodes,1)
-!        B(5,1:3*n_nodes-2:3) = dNdx(1:n_nodes,3)
-!        B(5,3:3*n_nodes:3)   = dNdx(1:n_nodes,1)
-!        B(6,2:3*n_nodes-1:3) = dNdx(1:n_nodes,3)
-!        B(6,3:3*n_nodes:3)   = dNdx(1:n_nodes,2)
+
 
         strain = matmul(B,dof_total)
         dstrain = matmul(B,dof_increment)
@@ -376,9 +334,7 @@ subroutine fieldvars_linelast_2dbasic(lmn, element_identifier, n_nodes, node_pro
     D(1,1) = d11
     D(2,2) = d11
     D(3,3) = d33
-!    D(4,4) = d44
-!    D(5,5) = d44
-!    D(6,6) = d44
+
   
     !     --  Loop over integration points
     do kint = 1, n_points
@@ -387,31 +343,11 @@ subroutine fieldvars_linelast_2dbasic(lmn, element_identifier, n_nodes, node_pro
         call invert_small(dxdxi,dxidx,determinant)
         dNdx(1:n_nodes,1:2) = matmul(dNdxi(1:n_nodes,1:2),dxidx)
         B = 0.d0
-!        B(1,1) = dNdx(1,1)
-!        B(1,3) = dNdx(2,1)
-!        B(1,5) = dNdx(3,1)
-!        B(2,2) = dNdx(1,2)
-!        B(2,4) = dNdx(2,2)
-!        B(2,6) = dNdx(3,2)
-!        B(3,1) = dNdx(1,2)
-!        B(3,2) = dNdx(1,1)
-!        B(3,3) = dNdx(2,2)
-!        B(3,4) = dNdx(2,1)
-!        B(3,5) = dNdx(3,2)
-!        B(3,6) = dNdx(3,1)
         B(1,1:2*n_nodes-2:2) = dNdx(1:n_nodes,1)
         B(2,2:2*n_nodes-1:2) = dNdx(1:n_nodes,2)
         B(3,1:2*n_nodes-2:2) = dNdx(1:n_nodes,2)
         B(3,2:2*n_nodes-1:2) = dNdx(1:n_nodes,1)
-!        B(1,1:2*n_nodes-2:2) = dNdx(1:n_nodes,1)
-!        B(2,2:2*n_nodes-1:2) = dNdx(1:n_nodes,2)
-!        B(3,3:2*n_nodes:3)   = dNdx(1:n_nodes,2)
-!        B(4,1:3*n_nodes-2:3) = dNdx(1:n_nodes,2)
-!        B(4,2:3*n_nodes-1:3) = dNdx(1:n_nodes,1)
-!        B(5,1:3*n_nodes-2:3) = dNdx(1:n_nodes,3)
-!        B(5,3:3*n_nodes:3)   = dNdx(1:n_nodes,1)
-!        B(6,2:3*n_nodes-1:3) = dNdx(1:n_nodes,3)
-!        B(6,3:3*n_nodes:3)   = dNdx(1:n_nodes,2)
+
 
         strain = matmul(B,dof_total)
         dstrain = matmul(B,dof_increment)

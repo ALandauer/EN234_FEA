@@ -4039,16 +4039,15 @@
          END PRINT STATE
 
 
-%          USER PRINT FILES
-%          List file names to contain the output. Fortran unit numbers are provided to each file in the user subroutine
-%            filename1.dat
-%            filename2.dat
-%          END USER PRINT FILES
-%          USER PRINT PARAMETERS
-%            list of parameters to be passed to the subroutine
-%             1.d0, 6.d0
-%             4
-%          END USER print PARAMETERS
+          USER PRINT FILES
+            J_int.dat
+          END USER PRINT FILES
+          
+          USER PRINT PARAMETERS
+            list of parameters to be passed to the subroutine
+             1.d0, 6.d0
+             4
+          END USER print PARAMETERS
 
         END STATIC STEP
          

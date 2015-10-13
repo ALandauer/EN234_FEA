@@ -166,6 +166,7 @@ subroutine compute_element_volume_average_3D(lmn,vol_averaged_strain,vol_average
        write(IOW,*) ' but the array storing averaged state variables has length ',size(vol_averaged_state_vars)
        stop
     endif
+
     !     --  Loop over integration points
     do kint = 1, n_points
         call calculate_shapefunctions(xi(1:3,kint),n_nodes,N,dNdxi)
@@ -224,6 +225,7 @@ subroutine compute_J_integral(J_integral_value)
     use Mesh, only : extract_element_data
     use Mesh, only : extract_node_data
     use Mesh, only : zone,zone_list
+    use Mesh, only : node
     use User_Subroutine_Storage
     use Element_Utilities, only : N => shape_functions_2D
     use Element_Utilities, only:  dNdxi => shape_function_derivatives_2D
@@ -250,9 +252,19 @@ subroutine compute_J_integral(J_integral_value)
 
     integer      :: status
     integer      :: iof
-    integer      :: lmn               ! Element number
-    integer      :: lmn_start,lmn_end ! First and last crack tip element
-    integer      :: i                 ! Loop counter
+    integer      :: lmn                     ! Element number
+    integer      :: lmn_start,lmn_end       ! First and last crack tip element
+    integer      :: i,j,k                   ! Loop counter
+    integer      :: n_points,kint,Jint
+
+    real (prec)  ::  strain(3), dstrain(3)             ! Strain vector contains [e11, e22, 2e12]
+    real (prec)  ::  stress(3)                         ! Stress vector contains [s11, s22, s12]
+    real (prec)  ::  D(3,3)                            ! stress = D*(strain+dstrain)  (NOTE FACTOR OF 2 in shear strain)
+    real (prec)  ::  dxidx(2,2), determinant           ! Jacobian inverse and determinant
+    real (prec)  ::  E, xnu, D33, D11, D12              ! Material properties
+    real( prec ) :: G_elem,W_sed
+    real( prec ) :: r_0,r
+
 
 !   The arrays below have to be given dimensions large enough to store the data. It doesnt matter if they are too large.
 
@@ -284,23 +296,103 @@ subroutine compute_J_integral(J_integral_value)
 
   !  Write your code to calculate the J integral here
 
+    if (n_nodes == 3) n_points = 1 !L6, P.11
+    if (n_nodes == 6) n_points = 4
+    if (n_nodes == 4) n_points = 4
+    if (n_nodes == 8) n_points = 9
+
   !  You will need to loop over the crack tip elements, and sum the contribution to the J integral from each element.
   !
   !  You can access the first and last crack tip element using
-  !    lmn_start = zone_list(2)%start_element
-  !    lmn_end = zone_list(2)%end_element
+      lmn_start = zone_list(2)%start_element
+      lmn_end = zone_list(2)%end_element
 
-  !  The two subroutines below extract data for elements and nodes (see module Mesh.f90 for the source code for these subroutines)
+    J_integral_value = 0.d0
+    G_elem = 0.d0
+    W_sed = 0.d0
+    r_0 = 0.0006
 
-    call extract_element_data(lmn,element_identifier,n_nodes,node_list,n_properties,element_properties, &
-                                            n_state_variables,initial_state_variables,updated_state_variables)
+    D = 0.d0
+    E = element_properties(1)
+    xnu = element_properties(2)
+    d11 = (1.D0-xnu)*E/( (1+xnu)*(1-2.D0*xnu) )
+    d12 = xnu*E/( (1+xnu)*(1-2.D0*xnu) )
+    d33 = (1.D0-2*xnu)*E/( 2*(1+xnu)*(1-2.D0*xnu) )
+    D(1:2,1:2) = d12
+    D(1,1) = d11
+    D(2,2) = d11
+    D(3,3) = d33
 
-    do i = 1, n_nodes
-        iof = 2*(i-1)+1     ! Points to first DOF for the node in the dof_increment and dof_total arrays
-        call extract_node_data(node_list(i),node_identifier,n_coords,x(1:2,i),n_dof, &
-                                                 dof_increment(iof:iof+2),dof_total(iof:iof+2))
+    do Jint = lmn_start,lmn_end
+
+
+        call calculate_shapefunctions(xi(1:2,kint),n_nodes,N,dNdxi)
+        dxdxi = matmul(x(1:2,1:n_nodes),dNdxi(1:n_nodes,1:2))
+        call invert_small(dxdxi,dxidx,determinant)
+        dNdx(1:n_nodes,1:2) = matmul(dNdxi(1:n_nodes,1:2),dxidx)
+        B = 0.d0
+
+        B(1,1:2*n_nodes-2:2) = dNdx(1:n_nodes,1)
+        B(2,2:2*n_nodes-1:2) = dNdx(1:n_nodes,2)
+        B(3,1:2*n_nodes-2:2) = dNdx(1:n_nodes,2)
+        B(3,2:2*n_nodes-1:2) = dNdx(1:n_nodes,1)
+        lmn = lmn+1
+
+        !  The two subroutines below extract data for elements and nodes (see module Mesh.f90 for the source code for these subroutines)
+        call extract_element_data(lmn,element_identifier,n_nodes,node_list,n_properties,element_properties, &
+                                                n_state_variables,initial_state_variables,updated_state_variables)
+        do i = 1, n_nodes
+            iof = 2*(i-1)+1     ! Points to first DOF for the node in the dof_increment and dof_total arrays
+            call extract_node_data(node_list(i),node_identifier,n_coords,x(1:2,i),n_dof, &
+                                                     dof_increment(iof:iof+2),dof_total(iof:iof+2))
+        end do
+
+        do kint = 1, n_points
+!            call calculate_shapefunctions(xi(1:2,kint),n_nodes,N,dNdxi)
+!            dxdxi = matmul(x(1:2,1:n_nodes),dNdxi(1:n_nodes,1:2))
+!            call invert_small(dxdxi,dxidx,determinant)
+!            dNdx(1:n_nodes,1:2) = matmul(dNdxi(1:n_nodes,1:2),dxidx)
+!            B = 0.d0
+!
+!            B(1,1:2*n_nodes-2:2) = dNdx(1:n_nodes,1)
+!            B(2,2:2*n_nodes-1:2) = dNdx(1:n_nodes,2)
+!            B(3,1:2*n_nodes-2:2) = dNdx(1:n_nodes,2)
+!            B(3,2:2*n_nodes-1:2) = dNdx(1:n_nodes,1)
+
+            strain = matmul(B,dof_total)
+            dstrain = matmul(B,dof_increment)
+
+            stress = matmul(D,strain+dstrain)
+
+            r = x(1,kint)**2+x(2,kint)**2
+            r = sqrt(r)
+
+            do j = 1,n_coords
+                do k = 1,n_coords
+
+                    if(k == 2) W_sed = stress(2)*(strain(2)+dstrain(2)/2)
+
+                    if (j == 1 .AND. k == 1) then
+                        G_elem = (stress(1)*dNdx(j,2)-W_sed)*(-x(k,kint)/(r*r_0))
+                    else if (j == 2 .AND. k == 2) then
+                        G_elem = (stress(2)*dNdx(j,2)-W_sed)*(-x(k,kint)/(r*r_0))
+                    else
+                        G_elem = (stress(3)*dNdx(j,2)-W_sed)*(-x(k,kint)/(r*r_0))
+                    end if
+
+                end do
+            end do
+
+!            element_residual(1:2*n_nodes) = element_residual(1:2*n_nodes) - matmul(transpose(B),stress)*w(kint)*determinant
+!            element_stiffness(1:2*n_nodes,1:2*n_nodes) = element_stiffness(1:2*n_nodes,1:2*n_nodes) &
+!                + matmul(transpose(B(1:3,1:2*n_nodes)),matmul(D,B(1:3,1:2*n_nodes)))*w(kint)*determinant
+
+            J_integral_value = J_integral_value + G_elem
+
+
+        end do
+
     end do
-
 
 
     deallocate(node_list)

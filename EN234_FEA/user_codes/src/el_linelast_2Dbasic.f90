@@ -313,6 +313,8 @@ subroutine fieldvars_linelast_2dbasic(lmn, element_identifier, n_nodes, node_pro
     !     element_properties(1)         Young's modulus
     !     element_properties(2)         Poisson's ratio
 
+    write(6,*) ' Fieldvars_2d'
+
     x = reshape(element_coords,(/2,length_coord_array/2/))
 
     if (n_nodes == 3) n_points = 1 !L6, P.11
@@ -340,6 +342,7 @@ subroutine fieldvars_linelast_2dbasic(lmn, element_identifier, n_nodes, node_pro
     do kint = 1, n_points
         call calculate_shapefunctions(xi(1:2,kint),n_nodes,N,dNdxi)
         dxdxi = matmul(x(1:2,1:n_nodes),dNdxi(1:n_nodes,1:2))
+
         call invert_small(dxdxi,dxidx,determinant)
         dNdx(1:n_nodes,1:2) = matmul(dNdxi(1:n_nodes,1:2),dxidx)
         B = 0.d0
@@ -370,8 +373,8 @@ subroutine fieldvars_linelast_2dbasic(lmn, element_identifier, n_nodes, node_pro
 !                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + stress(5)*N(1:n_nodes)*determinant*w(kint)
 !            else if (strcmp(field_variable_names(k),'S23',3) ) then
 !                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + stress(6)*N(1:n_nodes)*determinant*w(kint)
-            else if (strcmp(field_variable_names(k),'SMISES',6) ) then
-                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + smises*N(1:n_nodes)*determinant*w(kint)
+!            else if (strcmp(field_variable_names(k),'SMISES',6) ) then
+!                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + smises*N(1:n_nodes)*determinant*w(kint)
             endif
         end do
  

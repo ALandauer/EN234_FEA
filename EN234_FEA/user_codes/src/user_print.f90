@@ -13,12 +13,12 @@ subroutine user_print(n_steps)
   integer, intent(in) :: n_steps                                 ! Current step number
   
   integer ::  lmn
-  integer ::  status
-  integer ::  n_state_vars_per_intpt                                         ! No. state variables per integration point
-  real (prec) ::   vol_averaged_strain(6)                                    ! Volume averaged strain in an element
-  real (prec), allocatable ::   vol_averaged_state_variables(:)              ! Volume averaged state variables in an element
+!  integer ::  status
+!  integer ::  n_state_vars_per_intpt                                         ! No. state variables per integration point
+!  real (prec) ::   vol_averaged_strain(6)                                    ! Volume averaged strain in an element
+!  real (prec), allocatable ::   vol_averaged_state_variables(:)              ! Volume averaged state variables in an element
 
-
+ real( prec ) :: J_integral_value
 
 !
 !  Use this file to process or print time histories of the solution, or to print a non-standard mesh.
@@ -29,35 +29,43 @@ subroutine user_print(n_steps)
 !
 !
 
-   allocate(vol_averaged_state_variables(length_state_variable_array), stat=status)
+  J_integral_value = 0.d0
+  call compute_J_integral(J_integral_value)
 
-   if (status/=0) then
-      write(IOW,*) ' Error in subroutine user_print'
-      write(IOW,*) ' Unable to allocate memory for state variables '
-      stop
-   endif
-
+!   allocate(vol_averaged_state_variables(length_state_variable_array), stat=status)
+!
+!   if (status/=0) then
+!      write(IOW,*) ' Error in subroutine user_print'
+!      write(IOW,*) ' Unable to allocate memory for state variables '
+!      stop
+!   endif
+!
    lmn = int(user_print_parameters(1))     ! The element number
+!
+!   call compute_element_volume_average_3D(lmn,vol_averaged_strain,vol_averaged_state_variables,length_state_variable_array, &
+!                                                       n_state_vars_per_intpt)
+!
+!
+!    if (TIME<1.d-12) then
+!      if (n_state_vars_per_intpt<6) then
+!        write(user_print_units(1),'(A)') 'VARIABLES = TIME,e11,e22,e33,e12,e13,e23'
+!      else
+!         write(user_print_units(1),'(A)') 'VARIABLES = TIME,e11,e22,e33,e12,e13,e23,s11,s22,s33,s12,s13,s23'
+!      endif
+!    endif
+!
+!   if (n_state_vars_per_intpt<6) then
+!      write(user_print_units(1),'(7(1x,D12.5))') TIME+DTIME,vol_averaged_strain(1:6)
+!   else
+!      vol_averaged_state_variables(1:3) = vol_averaged_state_variables(1:3) + vol_averaged_state_variables(7)
+!      write(user_print_units(1),'(13(1x,D12.5))') TIME+DTIME,vol_averaged_strain(1:6),vol_averaged_state_variables(1:6)
+!   endif
 
-   call compute_element_volume_average_3D(lmn,vol_averaged_strain,vol_averaged_state_variables,length_state_variable_array, &
-                                                       n_state_vars_per_intpt)
-
-
-    if (TIME<1.d-12) then
-      if (n_state_vars_per_intpt<6) then
-        write(user_print_units(1),'(A)') 'VARIABLES = TIME,e11,e22,e33,e12,e13,e23'
-      else
-         write(user_print_units(1),'(A)') 'VARIABLES = TIME,e11,e22,e33,e12,e13,e23,s11,s22,s33,s12,s13,s23'
-      endif
-    endif
-
-   if (n_state_vars_per_intpt<6) then
-      write(user_print_units(1),'(7(1x,D12.5))') TIME+DTIME,vol_averaged_strain(1:6)
-   else
-      vol_averaged_state_variables(1:3) = vol_averaged_state_variables(1:3) + vol_averaged_state_variables(7)
-      write(user_print_units(1),'(13(1x,D12.5))') TIME+DTIME,vol_averaged_strain(1:6),vol_averaged_state_variables(1:6)
+   if (TIME<1.d-12) then
+        write(user_print_units(1),'(A)') 'VARIABLES = TIME,J_int_value'
    endif
 
+   write(user_print_units(1),'(7(1x,D12.5))') TIME+DTIME,J_integral_value
 
 
 end subroutine user_print
@@ -230,7 +238,7 @@ subroutine compute_J_integral(J_integral_value)
     use Element_Utilities, only : N => shape_functions_2D
     use Element_Utilities, only:  dNdxi => shape_function_derivatives_2D
     use Element_Utilities, only:  dNdx => shape_function_spatial_derivatives_2D
-    use Element_Utilities, only : xi => integrationpoints_3D, w => integrationweights_2D
+    use Element_Utilities, only : xi => integrationpoints_2D, w => integrationweights_2D
     use Element_Utilities, only : dxdxi => jacobian_2D
     use Element_Utilities, only : initialize_integration_points
     use Element_Utilities, only : calculate_shapefunctions
@@ -296,10 +304,15 @@ subroutine compute_J_integral(J_integral_value)
 
   !  Write your code to calculate the J integral here
 
+
+
+    write(6,*) ' Hello '
     if (n_nodes == 3) n_points = 1 !L6, P.11
-    if (n_nodes == 6) n_points = 4
-    if (n_nodes == 4) n_points = 4
+    if (n_nodes == 6) n_points = 9
+    if (n_nodes == 4) n_points = 9
     if (n_nodes == 8) n_points = 9
+
+    call initialize_integration_points(n_points, n_nodes, xi, w)
 
   !  You will need to loop over the crack tip elements, and sum the contribution to the J integral from each element.
   !
@@ -310,32 +323,12 @@ subroutine compute_J_integral(J_integral_value)
     J_integral_value = 0.d0
     G_elem = 0.d0
     W_sed = 0.d0
-    r_0 = 0.0006
+    r_0 = 0.0006d0
 
-    D = 0.d0
-    E = element_properties(1)
-    xnu = element_properties(2)
-    d11 = (1.D0-xnu)*E/( (1+xnu)*(1-2.D0*xnu) )
-    d12 = xnu*E/( (1+xnu)*(1-2.D0*xnu) )
-    d33 = (1.D0-2*xnu)*E/( 2*(1+xnu)*(1-2.D0*xnu) )
-    D(1:2,1:2) = d12
-    D(1,1) = d11
-    D(2,2) = d11
-    D(3,3) = d33
+    lmn = lmn_start-1
 
     do Jint = lmn_start,lmn_end
 
-
-        call calculate_shapefunctions(xi(1:2,kint),n_nodes,N,dNdxi)
-        dxdxi = matmul(x(1:2,1:n_nodes),dNdxi(1:n_nodes,1:2))
-        call invert_small(dxdxi,dxidx,determinant)
-        dNdx(1:n_nodes,1:2) = matmul(dNdxi(1:n_nodes,1:2),dxidx)
-        B = 0.d0
-
-        B(1,1:2*n_nodes-2:2) = dNdx(1:n_nodes,1)
-        B(2,2:2*n_nodes-1:2) = dNdx(1:n_nodes,2)
-        B(3,1:2*n_nodes-2:2) = dNdx(1:n_nodes,2)
-        B(3,2:2*n_nodes-1:2) = dNdx(1:n_nodes,1)
         lmn = lmn+1
 
         !  The two subroutines below extract data for elements and nodes (see module Mesh.f90 for the source code for these subroutines)
@@ -347,17 +340,30 @@ subroutine compute_J_integral(J_integral_value)
                                                      dof_increment(iof:iof+2),dof_total(iof:iof+2))
         end do
 
+        D = 0.d0
+        E = element_properties(1)
+        xnu = element_properties(2)
+        d11 = (1.D0-xnu)*E/( (1+xnu)*(1-2.D0*xnu) )
+        d12 = xnu*E/( (1+xnu)*(1-2.D0*xnu) )
+        d33 = (1.D0-2*xnu)*E/( 2*(1+xnu)*(1-2.D0*xnu) )
+        D(1:2,1:2) = d12
+        D(1,1) = d11
+        D(2,2) = d11
+        D(3,3) = d33
+
         do kint = 1, n_points
-!            call calculate_shapefunctions(xi(1:2,kint),n_nodes,N,dNdxi)
-!            dxdxi = matmul(x(1:2,1:n_nodes),dNdxi(1:n_nodes,1:2))
-!            call invert_small(dxdxi,dxidx,determinant)
-!            dNdx(1:n_nodes,1:2) = matmul(dNdxi(1:n_nodes,1:2),dxidx)
-!            B = 0.d0
-!
-!            B(1,1:2*n_nodes-2:2) = dNdx(1:n_nodes,1)
-!            B(2,2:2*n_nodes-1:2) = dNdx(1:n_nodes,2)
-!            B(3,1:2*n_nodes-2:2) = dNdx(1:n_nodes,2)
-!            B(3,2:2*n_nodes-1:2) = dNdx(1:n_nodes,1)
+
+            call calculate_shapefunctions(xi(1:2,kint),n_nodes,N,dNdxi)
+            dxdxi = matmul(x(1:2,1:n_nodes),dNdxi(1:n_nodes,1:2))
+
+            call invert_small(dxdxi,dxidx,determinant)
+            dNdx(1:n_nodes,1:2) = matmul(dNdxi(1:n_nodes,1:2),dxidx)
+            B = 0.d0
+
+            B(1,1:2*n_nodes-2:2) = dNdx(1:n_nodes,1)
+            B(2,2:2*n_nodes-1:2) = dNdx(1:n_nodes,2)
+            B(3,1:2*n_nodes-2:2) = dNdx(1:n_nodes,2)
+            B(3,2:2*n_nodes-1:2) = dNdx(1:n_nodes,1)
 
             strain = matmul(B,dof_total)
             dstrain = matmul(B,dof_increment)
@@ -389,7 +395,6 @@ subroutine compute_J_integral(J_integral_value)
 
             J_integral_value = J_integral_value + G_elem
 
-
         end do
 
     end do
@@ -404,11 +409,7 @@ subroutine compute_J_integral(J_integral_value)
     deallocate(dof_total)
     deallocate(B)
 
-
     return
-
-
-
 
 end subroutine compute_J_integral
 

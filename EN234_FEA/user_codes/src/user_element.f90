@@ -54,7 +54,8 @@ subroutine user_element_static(lmn, element_identifier, n_nodes, node_property_l
     fail = .false.
 
     updated_state_variables = initial_state_variables
-
+    write(6,*) ' element ',lmn
+    write(6,*) ' id ',element_identifier
 
     if ( element_identifier == 1001 ) then              ! Basic fully integrated 2D linear elastic element
 
@@ -215,7 +216,8 @@ subroutine user_element_fieldvariables(lmn, element_identifier, n_nodes, node_pr
              
     real( prec ), intent( out )   :: nodal_fieldvariables(n_field_variables,n_nodes)        ! Element stiffness (ROW,COLUMN)
 
-
+    write(6,*)  'element',lmn
+    write(6,*) ' id ',element_identifier
 
     if ( element_identifier == 1001 ) then              ! Basic fully integrated 3D linear elastic element
 
@@ -227,6 +229,7 @@ subroutine user_element_fieldvariables(lmn, element_identifier, n_nodes, node_pr
             nodal_fieldvariables)      ! Output variables
 
         else if ( element_identifier == 101 ) then
+
             call fieldvars_linelast_2dbasic(lmn, element_identifier, n_nodes, node_property_list, &           ! Input variables
                 n_properties, element_properties,element_coords, length_coord_array, &                                   ! Input variables
                 dof_increment, dof_total, length_dof_array, &                                                            ! Input variables

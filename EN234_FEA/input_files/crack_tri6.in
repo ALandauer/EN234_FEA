@@ -4039,15 +4039,15 @@
          END PRINT STATE
 
 
-%          USER PRINT FILES
-%             J_integral.dat
-%          END USER PRINT FILES
+          USER PRINT FILES
+             J_integral.dat
+          END USER PRINT FILES
           
-          USER PRINT PARAMETERS
+%         USER PRINT PARAMETERS
 %           list of parameters to be passed to the subroutine
-             1.d0, 6.d0
-             4
-          END USER PRINT PARAMETERS
+%            1.d0, 6.d0
+%            4
+%         END USER PRINT PARAMETERS
 
         END STATIC STEP
          

@@ -54,8 +54,6 @@ subroutine user_element_static(lmn, element_identifier, n_nodes, node_property_l
     fail = .false.
 
     updated_state_variables = initial_state_variables
-    write(6,*) ' element ',lmn
-    write(6,*) ' id ',element_identifier
 
     if ( element_identifier == 1001 ) then              ! Basic fully integrated 2D linear elastic element
 

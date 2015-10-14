@@ -40,7 +40,6 @@ subroutine user_print(n_steps)
 !      stop
 !   endif
 !
-   lmn = int(user_print_parameters(1))     ! The element number
 !
 !   call compute_element_volume_average_3D(lmn,vol_averaged_strain,vol_averaged_state_variables,length_state_variable_array, &
 !                                                       n_state_vars_per_intpt)
@@ -272,6 +271,7 @@ subroutine compute_J_integral(J_integral_value)
     real (prec)  ::  E, xnu, D33, D11, D12              ! Material properties
     real( prec ) :: G_elem,W_sed
     real( prec ) :: r_0,r
+    real( prec ) :: x_intpt(2)
 
 
 !   The arrays below have to be given dimensions large enough to store the data. It doesnt matter if they are too large.
@@ -305,14 +305,8 @@ subroutine compute_J_integral(J_integral_value)
   !  Write your code to calculate the J integral here
 
 
-
-    write(6,*) ' Hello '
-    if (n_nodes == 3) n_points = 1 !L6, P.11
-    if (n_nodes == 6) n_points = 9
-    if (n_nodes == 4) n_points = 9
-    if (n_nodes == 8) n_points = 9
-
     call initialize_integration_points(n_points, n_nodes, xi, w)
+
 
   !  You will need to loop over the crack tip elements, and sum the contribution to the J integral from each element.
   !
@@ -325,11 +319,9 @@ subroutine compute_J_integral(J_integral_value)
     W_sed = 0.d0
     r_0 = 0.0006d0
 
-    lmn = lmn_start-1
 
-    do Jint = lmn_start,lmn_end
+    do lmn = lmn_start,lmn_end
 
-        lmn = lmn+1
 
         !  The two subroutines below extract data for elements and nodes (see module Mesh.f90 for the source code for these subroutines)
         call extract_element_data(lmn,element_identifier,n_nodes,node_list,n_properties,element_properties, &
@@ -339,6 +331,13 @@ subroutine compute_J_integral(J_integral_value)
             call extract_node_data(node_list(i),node_identifier,n_coords,x(1:2,i),n_dof, &
                                                      dof_increment(iof:iof+2),dof_total(iof:iof+2))
         end do
+
+
+
+        if (n_nodes == 3) n_points = 1 !L6, P.11
+        if (n_nodes == 6) n_points = 4
+        if (n_nodes == 4) n_points = 4
+        if (n_nodes == 8) n_points = 9
 
         D = 0.d0
         E = element_properties(1)
@@ -365,35 +364,29 @@ subroutine compute_J_integral(J_integral_value)
             B(3,1:2*n_nodes-2:2) = dNdx(1:n_nodes,2)
             B(3,2:2*n_nodes-1:2) = dNdx(1:n_nodes,1)
 
-            strain = matmul(B,dof_total)
-            dstrain = matmul(B,dof_increment)
+
+            strain = matmul(B(1:3,1:2*n_nodes),dof_total(1:2*n_nodes))
+            dstrain = matmul(B(1:3,1:2*n_nodes),dof_increment(1:2*n_nodes))
 
             stress = matmul(D,strain+dstrain)
 
-            r = x(1,kint)**2+x(2,kint)**2
-            r = sqrt(r)
+            x_intpt = matmul(x(1:2,1:n_nodes),N(1:n_nodes))
 
-            do j = 1,n_coords
-                do k = 1,n_coords
+            r = x_intpt(1)**2+x_intpt(2)**2
+            r = dsqrt(r)
 
-                    if(k == 2) W_sed = stress(2)*(strain(2)+dstrain(2)/2)
 
-                    if (j == 1 .AND. k == 1) then
-                        G_elem = (stress(1)*dNdx(j,2)-W_sed)*(-x(k,kint)/(r*r_0))
-                    else if (j == 2 .AND. k == 2) then
-                        G_elem = (stress(2)*dNdx(j,2)-W_sed)*(-x(k,kint)/(r*r_0))
-                    else
-                        G_elem = (stress(3)*dNdx(j,2)-W_sed)*(-x(k,kint)/(r*r_0))
-                    end if
+            W_sed = 0.5d0*dot_product(stress,strain+dstrain)
 
-                end do
-            end do
+
+            G_elem = (stress(1)*x_intpt(1)/r/r_0 + stress(3)*x_intpt(2)/r/r_0)*strain(3) + &
+                (stress(2)*x_intpt(2)/r/r_0 + stress(3)*x_intpt(1)/r/r_0)*strain(2)
 
 !            element_residual(1:2*n_nodes) = element_residual(1:2*n_nodes) - matmul(transpose(B),stress)*w(kint)*determinant
 !            element_stiffness(1:2*n_nodes,1:2*n_nodes) = element_stiffness(1:2*n_nodes,1:2*n_nodes) &
 !                + matmul(transpose(B(1:3,1:2*n_nodes)),matmul(D,B(1:3,1:2*n_nodes)))*w(kint)*determinant
 
-            J_integral_value = J_integral_value + G_elem
+            J_integral_value = J_integral_value + (G_elem) + (W_sed*x_intpt(2)/r/r_0)*determinant*w(kint)
 
         end do
 

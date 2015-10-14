@@ -68,10 +68,6 @@ program en234fea
   outfil = './Output_files/crack_tri6.out'
   open (UNIT = IOW, FILE = outfil, STATUS = 'unknown', ERR=500)
 
-  write(IOW,*) ' Started main '
-
-  write(6,*) ' Files open '
-
 !  Homework 5, small-strain B bar element - test with same files as in HW3, but
 !  try approaching incompressible limit by making Poisson's ratio close to 0.5
 

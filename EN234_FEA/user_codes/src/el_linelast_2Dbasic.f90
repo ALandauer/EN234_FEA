@@ -313,7 +313,6 @@ subroutine fieldvars_linelast_2dbasic(lmn, element_identifier, n_nodes, node_pro
     !     element_properties(1)         Young's modulus
     !     element_properties(2)         Poisson's ratio
 
-    write(6,*) ' Fieldvars_2d'
 
     x = reshape(element_coords,(/2,length_coord_array/2/))
 
@@ -368,7 +367,7 @@ subroutine fieldvars_linelast_2dbasic(lmn, element_identifier, n_nodes, node_pro
 !            else if (strcmp(field_variable_names(k),'S33',3) ) then
 !                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + stress(3)*N(1:n_nodes)*determinant*w(kint)
             else if (strcmp(field_variable_names(k),'S12',3) ) then
-!                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + stress(4)*N(1:n_nodes)*determinant*w(kint)
+                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + stress(3)*N(1:n_nodes)*determinant*w(kint)
 !            else if (strcmp(field_variable_names(k),'S13',3) ) then
 !                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + stress(5)*N(1:n_nodes)*determinant*w(kint)
 !            else if (strcmp(field_variable_names(k),'S23',3) ) then

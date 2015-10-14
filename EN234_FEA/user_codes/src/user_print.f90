@@ -377,16 +377,15 @@ subroutine compute_J_integral(J_integral_value)
 
 
             W_sed = 0.5d0*dot_product(stress,strain+dstrain)
-
-
-            G_elem = (stress(1)*x_intpt(1)/r/r_0 + stress(3)*x_intpt(2)/r/r_0)*strain(3) + &
-                (stress(2)*x_intpt(2)/r/r_0 + stress(3)*x_intpt(1)/r/r_0)*strain(2)
+!
+            G_elem = (-stress(1)*x_intpt(1)/r/r_0 - stress(3)*x_intpt(2)/r/r_0)*(strain(3)) + &
+                (-stress(2)*x_intpt(2)/r/r_0 - stress(3)*x_intpt(1)/r/r_0)*(strain(2))
 
 !            element_residual(1:2*n_nodes) = element_residual(1:2*n_nodes) - matmul(transpose(B),stress)*w(kint)*determinant
 !            element_stiffness(1:2*n_nodes,1:2*n_nodes) = element_stiffness(1:2*n_nodes,1:2*n_nodes) &
 !                + matmul(transpose(B(1:3,1:2*n_nodes)),matmul(D,B(1:3,1:2*n_nodes)))*w(kint)*determinant
 
-            J_integral_value = J_integral_value + (G_elem) + (W_sed*x_intpt(2)/r/r_0)*determinant*w(kint)
+            J_integral_value = J_integral_value + G_elem*determinant*w(kint) + (W_sed*x_intpt(2)/r/r_0)*determinant*w(kint)
 
         end do
 

@@ -214,8 +214,6 @@ subroutine user_element_fieldvariables(lmn, element_identifier, n_nodes, node_pr
              
     real( prec ), intent( out )   :: nodal_fieldvariables(n_field_variables,n_nodes)        ! Element stiffness (ROW,COLUMN)
 
-    write(6,*)  'element',lmn
-    write(6,*) ' id ',element_identifier
 
     if ( element_identifier == 1001 ) then              ! Basic fully integrated 3D linear elastic element
 

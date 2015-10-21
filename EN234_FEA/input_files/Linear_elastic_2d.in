@@ -13,7 +13,7 @@
 %    The parameters are # of coords, # of DOF, and an optional integer identifier
        NODES, 2, 2, 1
 %    The parameters are # of coords, # of DOF, and an optional integer identifier
-       PARAMETERS, 2, 2, 1
+       PARAMETERS, 2, 2, 2 %use this id to flag bbar
 %      Specify which nodal DOF are displacements.  In the example, DOF 1 is the x displacement, 2 is the y displacement, 3 is the z displacement
        DISPLACEMENT DOF, 1, 2
 %    Enter x,y,z coords of nodes.   The node number is optional, and is ignored in the code.
@@ -44,11 +44,11 @@
 %     The parameters are no. nodes on the element,  total no. state variables, integer identifier
 
       ELEMENTS
-        PARAMETERS, 6, 0, 101
+        PARAMETERS, 6, 0, 1011
 %       Define element properties - the values are passed to user subroutine elstif in the order they are listed here
 %       For the example provided, the params are Youngs Modulus, Poissons ratio
         PROPERTIES
-         100.d0, 0.3d0
+         100.d0, 0.499d0
         END PROPERTIES
 %     Define mass density (for explicity dynamics only)
 %       DENSITY, 10.d0
@@ -98,7 +98,6 @@
 
 %      The ELEMENTSET key defines a list of elements
        ELEMENTSET, end_element
-           1
            2
        END ELEMENTSET
 
@@ -106,9 +105,10 @@
 %       The syntax is node set name, DOF number, VALUE/HISTORY/SUBROUTINE, value/history name/subroutine parameter list name.
 %     
         DEGREES OF FREEDOM
-           left, 1, HISTORY, dof_history2
+           left, 2, VALUE, 0.d0
+           left, 1, VALUE, 0.d0
           % left, 2, VALUE, 0.d0
-           right, 1, HISTORY, dof_history1
+           right, 2, HISTORY, dof_history1
 %          base, 2, VALUE, 0.d0
 %          base, 1, VALUE, 0.d0
         END DEGREES OF FREEDOM
@@ -127,7 +127,7 @@
 
 %   The CHECK STIFFNESS key tests the element subroutine to ensure that
 %   the residual force vector is consistent with the stiffness
-       CHECK STIFFNESS, 101
+       CHECK STIFFNESS, 1011
 
 
 
@@ -142,7 +142,7 @@
           INITIAL TIME STEP, 1.d0       
           MAX TIME STEP, 1.d0
           MIN TIME STEP, 0.001d0
-          MAX NUMBER OF STEPS, 3
+          MAX NUMBER OF STEPS, 1
           STOP TIME, 10.d0
           STATE PRINT STEP INTERVAL, 1
           USER PRINT STEP INTERVAL, 1

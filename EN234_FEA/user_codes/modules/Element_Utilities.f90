@@ -937,9 +937,6 @@ contains
    
     end subroutine calculate_shapefunctions
    
-
-
-
     subroutine facenodes(ndims,nelnodes,face,list,nfacenodes)
         use Types
         use ParamIO

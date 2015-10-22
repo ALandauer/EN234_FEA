@@ -14,7 +14,7 @@
 %    The parameters are # of coords, # of DOF, and an optional integer identifier
        NODES
 %    The parameters are # of coords, # of DOF, and an optional integer identifier
-       PARAMETERS, 3, 3, 2
+       PARAMETERS, 3, 3, 1
 %      Specify which nodal DOF are displacements.  In the example, DOF 1 is the x displacement, 2 is the y displacement, 3 is the z displacement
        DISPLACEMENT DOF, 1, 2, 3
 %    Enter x,y,z coords of nodes.   The node number is optional, and is ignored in the code.
@@ -38,11 +38,11 @@
 %     The parameters are no. nodes on the element, total no. state variables, integer identifier
 
       ELEMENTS
-        PARAMETERS, 8, 0, 1001
+        PARAMETERS, 8, 0, 1002
 %       Define element properties - the values are passed to user subroutine elstif in the order they are listed here
 %       For the example provided, the params are Youngs Modulus, Poissons ratio
         PROPERTIES
-         100.d0, 0.49d0
+         100.d0, 0.499d0
         END PROPERTIES
 %     Define mass density (for explicity dynamics only)
 %       DENSITY, 10.d0
@@ -111,7 +111,7 @@
 %           element set, face #, SUBROUTINE, subroutine parameter name
 
         DISTRIBUTED LOAD
-          end_element, 4, value, 1,0,0
+          end_element, 4, value, 011,0,0
         END DISTRIBUTED LOAD
 
 %       The CONSTRAINTS key gives a way to enforce constraints between pairs or groups of nodes.
@@ -145,7 +145,7 @@
 
 %   The CHECK STIFFNESS key tests the element subroutine to ensure that
 %   the residual force vector is consistent with the stiffness
-       CHECK STIFFNESS, 1001
+       CHECK STIFFNESS, 1002
 
 
 
@@ -159,7 +159,7 @@
 
           INITIAL TIME STEP, 1.d0        % Test of a comment here
           MAX TIME STEP, 1.d0
-          MIN TIME STEP, 0.001d0
+          MIN TIME STEP, 0.0001d0
           MAX NUMBER OF STEPS, 1
           STOP TIME, 10.d0
           STATE PRINT STEP INTERVAL, 1
@@ -174,7 +174,7 @@
 %                        For nonlinear solver, must specify convergence tolerance and max # iterations
 %                        UNSYMMETRIC  (optional - only for unsymmetric stiffness)
 
-         SOLVER, DIRECT, LINEAR, UNSYMMETRIC
+         SOLVER, DIRECT, LINEAR
 
 
 %      This prints the DOF values and projected nodal state for all solid elements to a tecplot readable file
@@ -185,7 +185,7 @@
 %         In this example the states are the stresses sxx,syy,szz,sxy,sxz,syz
          PRINT STATE, Output_files\contourplots_3dtest_bb.dat
             DEGREES OF FREEDOM
-            FIELD VARIABLES, S11,S22,S33,S12,S13,S23,e11,e22,e33,e12,e13,e23
+            FIELD VARIABLES, S11,S22,S33,S12,S13,S23
             DISPLACED MESH
             DISPLACEMENT SCALE FACTOR, 1.d0
          END PRINT STATE

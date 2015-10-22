@@ -55,7 +55,7 @@ subroutine user_element_static(lmn, element_identifier, n_nodes, node_property_l
 
     updated_state_variables = initial_state_variables
 
-    if ( element_identifier == 1001 ) then              ! Basic fully integrated 2D linear elastic element
+    if ( element_identifier == 1001.or.element_identifier == 1002 ) then              ! Basic fully integrated 3D linear elastic element
 
         call el_linelast_3dbasic(lmn, element_identifier, n_nodes, node_property_list, &           ! Input variables
     n_properties, element_properties, element_coords, length_coord_array, &                      ! Input variables
@@ -229,7 +229,7 @@ subroutine user_element_fieldvariables(lmn, element_identifier, n_nodes, node_pr
     real( prec ), intent( out )   :: nodal_fieldvariables(n_field_variables,n_nodes)        ! Element stiffness (ROW,COLUMN)
 
 
-    if ( element_identifier == 1001 ) then              ! Basic fully integrated 3D linear elastic element
+    if ( element_identifier == 1001.or.element_identifier == 1002 ) then               ! Basic fully integrated 3D linear elastic element
 
         call fieldvars_linelast_3dbasic(lmn, element_identifier, n_nodes, node_property_list, &         ! Input variables
             n_properties, element_properties,element_coords, length_coord_array,  &                     ! Input variables

@@ -89,8 +89,8 @@ subroutine el_linelast_3dbasic(lmn, element_identifier, n_nodes, node_property_l
     if (n_nodes == 8) n_points = 8
     if (n_nodes == 20) n_points = 27
 
-    nn = 1
-    call extract_node_data(nn,flag,n_coords,nodal_coords,n_dof,nodal_dof_increment,nodal_dof_total)
+!    nn = 1
+!    call extract_node_data(nn,flag,n_coords,nodal_coords,n_dof,nodal_dof_increment,nodal_dof_total)
     call initialize_integration_points(n_points, n_nodes, xi, w)
 
     element_residual = 0.d0
@@ -109,8 +109,9 @@ subroutine el_linelast_3dbasic(lmn, element_identifier, n_nodes, node_property_l
     D(4,4) = d44
     D(5,5) = d44
     D(6,6) = d44
-  
-    if (flag == 1) then
+
+
+    if (element_identifier == 1001) then
 
         !     --  Loop over integration points
         do kint = 1, n_points
@@ -140,8 +141,23 @@ subroutine el_linelast_3dbasic(lmn, element_identifier, n_nodes, node_property_l
 
         end do
       
-    elseif (flag == 2) then
+    elseif (element_identifier == 1002) then
         ! For B_bar elements
+        el_vol = 0.d0
+        dNbardx = 0.d0
+        do intvol = 1,n_points
+            call calculate_shapefunctions(xi(1:3,intvol),n_nodes,N,dNdxi)
+            dxdxi = matmul(x(1:3,1:n_nodes),dNdxi(1:n_nodes,1:3))
+            call invert_small(dxdxi,dxidx,determinant)
+!            write(6,*) w(intvol)
+            dNdx(1:n_nodes,1:3) = matmul(dNdxi(1:n_nodes,1:3),dxidx)
+            el_vol = el_vol + w(intvol)*determinant
+            dNbardx(1:n_nodes,1:3) = dNbardx(1:n_nodes,1:3) + dNdx(1:n_nodes,1:3)*w(intvol)*determinant
+        end do
+
+        dNbardx = dNbardx/el_vol
+
+!         write(6,*) dNbardx
 
         !     --  Loop over integration points
         do kint = 1, n_points
@@ -149,13 +165,6 @@ subroutine el_linelast_3dbasic(lmn, element_identifier, n_nodes, node_property_l
             dxdxi = matmul(x(1:3,1:n_nodes),dNdxi(1:n_nodes,1:3))
             call invert_small(dxdxi,dxidx,determinant)
             dNdx(1:n_nodes,1:3) = matmul(dNdxi(1:n_nodes,1:3),dxidx)
-
-            do intvol = 1,n_points
-                el_vol = el_vol + w(intvol)*determinant
-                dNbardx(1:n_nodes,1:3) = dNbardx(1:n_nodes,1:3) + dNdx(1:n_nodes,1:3)*w(intvol)*determinant
-            end do
-
-            dNbardx = dNbardx/el_vol
 
             B = 0.d0
             B(1,1:3*n_nodes-2:3) = dNdx(1:n_nodes,1)
@@ -172,16 +181,16 @@ subroutine el_linelast_3dbasic(lmn, element_identifier, n_nodes, node_property_l
             B(6,3:3*n_nodes:3)   = dNdx(1:n_nodes,2)
 
             B(1,1:3*n_nodes-2:3) = B(1,1:3*n_nodes-2:3) + (dNbardx(1:n_nodes,1)-dNdx(1:n_nodes,1))/3
-            B(1,2:3*n_nodes-2:3) = B(1,2:3*n_nodes-2:3) + (dNbardx(1:n_nodes,2)-dNdx(1:n_nodes,2))/3
-            B(1,3:3*n_nodes-2:3) = B(1,3:3*n_nodes-2:3) + (dNbardx(1:n_nodes,3)-dNdx(1:n_nodes,3))/3
+            B(1,2:3*n_nodes-1:3) = B(1,2:3*n_nodes-1:3) + (dNbardx(1:n_nodes,2)-dNdx(1:n_nodes,2))/3
+            B(1,3:3*n_nodes:3) = B(1,3:3*n_nodes:3) + (dNbardx(1:n_nodes,3)-dNdx(1:n_nodes,3))/3
 
             B(2,1:3*n_nodes-2:3) = B(2,1:3*n_nodes-2:3) + (dNbardx(1:n_nodes,1)-dNdx(1:n_nodes,1))/3
-            B(2,2:3*n_nodes-2:3) = B(2,2:3*n_nodes-2:3) + (dNbardx(1:n_nodes,2)-dNdx(1:n_nodes,2))/3
-            B(2,3:3*n_nodes-2:3) = B(2,3:3*n_nodes-2:3) + (dNbardx(1:n_nodes,3)-dNdx(1:n_nodes,3))/3
+            B(2,2:3*n_nodes-1:3) = B(2,2:3*n_nodes-1:3) + (dNbardx(1:n_nodes,2)-dNdx(1:n_nodes,2))/3
+            B(2,3:3*n_nodes:3) = B(2,3:3*n_nodes:3) + (dNbardx(1:n_nodes,3)-dNdx(1:n_nodes,3))/3
 
             B(3,1:3*n_nodes-2:3) = B(3,1:3*n_nodes-2:3) + (dNbardx(1:n_nodes,1)-dNdx(1:n_nodes,1))/3
-            B(3,2:3*n_nodes-2:3) = B(3,2:3*n_nodes-2:3) + (dNbardx(1:n_nodes,2)-dNdx(1:n_nodes,2))/3
-            B(3,3:3*n_nodes-2:3) = B(3,3:3*n_nodes-2:3) + (dNbardx(1:n_nodes,3)-dNdx(1:n_nodes,3))/3
+            B(3,2:3*n_nodes-1:3) = B(3,2:3*n_nodes-1:3) + (dNbardx(1:n_nodes,2)-dNdx(1:n_nodes,2))/3
+            B(3,3:3*n_nodes:3) = B(3,3:3*n_nodes:3) + (dNbardx(1:n_nodes,3)-dNdx(1:n_nodes,3))/3
 
             strain = matmul(B,dof_total)
             dstrain = matmul(B,dof_increment)
@@ -194,7 +203,7 @@ subroutine el_linelast_3dbasic(lmn, element_identifier, n_nodes, node_property_l
 
         end do
     else
-    write(6,*) 'no vaild element identifier'
+        write(6,*) 'no vaild element identifier'
 
     end if
   
@@ -283,8 +292,8 @@ subroutine el_linelast_3dbasic_dynamic(lmn, element_identifier, n_nodes, node_pr
     if (n_nodes == 8) n_points = 8
     if (n_nodes == 20) n_points = 27
 
-    nn = 1
-    call extract_node_data(nn,flag,n_coords,nodal_coords,n_dof,nodal_dof_increment,nodal_dof_total)
+!    nn = 1
+!    call extract_node_data(nn,flag,n_coords,nodal_coords,n_dof,nodal_dof_increment,nodal_dof_total)
     call initialize_integration_points(n_points, n_nodes, xi, w)
 
     element_residual = 0.d0
@@ -303,7 +312,7 @@ subroutine el_linelast_3dbasic_dynamic(lmn, element_identifier, n_nodes, node_pr
     D(5,5) = d44
     D(6,6) = d44
   
-    if (flag == 1) then
+    if (element_identifier == 1001) then
 
         !     --  Loop over integration points
         do kint = 1, n_points
@@ -330,8 +339,10 @@ subroutine el_linelast_3dbasic_dynamic(lmn, element_identifier, n_nodes, node_pr
 
         end do
       
-    elseif (flag == 2) then
+    elseif (element_identifier == 1002) then
         ! For B_bar elements
+
+
 
         !     --  Loop over integration points
         do kint = 1, n_points
@@ -381,7 +392,7 @@ subroutine el_linelast_3dbasic_dynamic(lmn, element_identifier, n_nodes, node_pr
 
         end do
     else
-    write(6,*) 'no vaild element identifier'
+        write(6,*) 'no vaild element identifier'
 
     end if
   
@@ -443,7 +454,7 @@ subroutine fieldvars_linelast_3dbasic(lmn, element_identifier, n_nodes, node_pro
     real( prec ), intent( in )    :: updated_state_variables(n_state_variables)             ! State variables at end of time step
              
     real( prec ), intent( out )   :: nodal_fieldvariables(n_field_variables,n_nodes)        ! Nodal field variables
-        real( prec )   :: nodal_coords(length_coord_array)                                  ! use to call to extract_node_data
+    real( prec )   :: nodal_coords(length_coord_array)                                  ! use to call to extract_node_data
     real( prec )   :: nodal_dof_increment(length_coord_array)
     real( prec )   :: nodal_dof_total(length_coord_array)
 
@@ -476,13 +487,13 @@ subroutine fieldvars_linelast_3dbasic(lmn, element_identifier, n_nodes, node_pro
     if (n_nodes == 8) n_points = 8
     if (n_nodes == 20) n_points = 27
 
-    nn = 1
-    call extract_node_data(nn,flag,n_coords,nodal_coords,n_dof,nodal_dof_increment,nodal_dof_total)
+    !    nn = 1
+    !    call extract_node_data(nn,flag,n_coords,nodal_coords,n_dof,nodal_dof_increment,nodal_dof_total)
     call initialize_integration_points(n_points, n_nodes, xi, w)
 
     nodal_fieldvariables = 0.d0
 	
-	el_vol = 0.d0
+    el_vol = 0.d0
     D = 0.d0
     E = element_properties(1)
     xnu = element_properties(2)
@@ -497,75 +508,81 @@ subroutine fieldvars_linelast_3dbasic(lmn, element_identifier, n_nodes, node_pro
     D(5,5) = d44
     D(6,6) = d44
   
-    if (flag == 1) then
+    if (element_identifier == 1001) then
 
         !     --  Loop over integration points
         do kint = 1, n_points
-        call calculate_shapefunctions(xi(1:3,kint),n_nodes,N,dNdxi)
-        dxdxi = matmul(x(1:3,1:n_nodes),dNdxi(1:n_nodes,1:3))
-        call invert_small(dxdxi,dxidx,determinant)
-        dNdx(1:n_nodes,1:3) = matmul(dNdxi(1:n_nodes,1:3),dxidx)
-        B = 0.d0
-        B(1,1:3*n_nodes-2:3) = dNdx(1:n_nodes,1)
-        B(2,2:3*n_nodes-1:3) = dNdx(1:n_nodes,2)
-        B(3,3:3*n_nodes:3)   = dNdx(1:n_nodes,3)
-        B(4,1:3*n_nodes-2:3) = dNdx(1:n_nodes,2)
-        B(4,2:3*n_nodes-1:3) = dNdx(1:n_nodes,1)
-        B(5,1:3*n_nodes-2:3) = dNdx(1:n_nodes,3)
-        B(5,3:3*n_nodes:3)   = dNdx(1:n_nodes,1)
-        B(6,2:3*n_nodes-1:3) = dNdx(1:n_nodes,3)
-        B(6,3:3*n_nodes:3)   = dNdx(1:n_nodes,2)
+            call calculate_shapefunctions(xi(1:3,kint),n_nodes,N,dNdxi)
+            dxdxi = matmul(x(1:3,1:n_nodes),dNdxi(1:n_nodes,1:3))
+            call invert_small(dxdxi,dxidx,determinant)
+            dNdx(1:n_nodes,1:3) = matmul(dNdxi(1:n_nodes,1:3),dxidx)
+            B = 0.d0
+            B(1,1:3*n_nodes-2:3) = dNdx(1:n_nodes,1)
+            B(2,2:3*n_nodes-1:3) = dNdx(1:n_nodes,2)
+            B(3,3:3*n_nodes:3)   = dNdx(1:n_nodes,3)
+            B(4,1:3*n_nodes-2:3) = dNdx(1:n_nodes,2)
+            B(4,2:3*n_nodes-1:3) = dNdx(1:n_nodes,1)
+            B(5,1:3*n_nodes-2:3) = dNdx(1:n_nodes,3)
+            B(5,3:3*n_nodes:3)   = dNdx(1:n_nodes,1)
+            B(6,2:3*n_nodes-1:3) = dNdx(1:n_nodes,3)
+            B(6,3:3*n_nodes:3)   = dNdx(1:n_nodes,2)
 
-        strain = matmul(B,dof_total)
-        dstrain = matmul(B,dof_increment)
-        stress = matmul(D,strain+dstrain)
-        p = sum(stress(1:3))/3.d0
-        sdev = stress
-        sdev(1:3) = sdev(1:3)-p
-        smises = dsqrt( dot_product(sdev(1:3),sdev(1:3)) + 2.d0*dot_product(sdev(4:6),sdev(4:6)) )*dsqrt(1.5d0)
-        ! In the code below the strcmp( string1, string2, nchar) function returns true if the first nchar characters in strings match
-        do k = 1,n_field_variables
-            if (strcmp(field_variable_names(k),'S11',3) ) then
-                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + stress(1)*N(1:n_nodes)*determinant*w(kint)
-            else if (strcmp(field_variable_names(k),'S22',3) ) then
-                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + stress(2)*N(1:n_nodes)*determinant*w(kint)
-            else if (strcmp(field_variable_names(k),'S33',3) ) then
-                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + stress(3)*N(1:n_nodes)*determinant*w(kint)
-            else if (strcmp(field_variable_names(k),'S12',3) ) then
-                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + stress(4)*N(1:n_nodes)*determinant*w(kint)
-            else if (strcmp(field_variable_names(k),'S13',3) ) then
-                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + stress(5)*N(1:n_nodes)*determinant*w(kint)
-            else if (strcmp(field_variable_names(k),'S23',3) ) then
-                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + stress(6)*N(1:n_nodes)*determinant*w(kint)
-            else if (strcmp(field_variable_names(k),'SMISES',6) ) then
-                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + smises*N(1:n_nodes)*determinant*w(kint)
-!            else if (strcmp(field_variable_names(k),'e11',3) ) then
-!                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + (strain(1)+dstrain(1))
-!            else if (strcmp(field_variable_names(k),'e22',3) ) then
-!                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + (strain(2)+dstrain(2))
-!            else if (strcmp(field_variable_names(k),'e33',3) ) then
-!                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + (strain(3)+dstrain(3))
-!            else if (strcmp(field_variable_names(k),'e12',3) ) then
-!                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + (strain(4)+dstrain(4))/2
-!            else if (strcmp(field_variable_names(k),'e13',3) ) then
-!                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + (strain(5)+dstrain(5))/2
-!            else if (strcmp(field_variable_names(k),'e23',3) ) then
-!                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + (strain(6)+dstrain(6))/2
-            endif
-        end do
+            strain = matmul(B,dof_total)
+            dstrain = matmul(B,dof_increment)
+            stress = matmul(D,strain+dstrain)
+            p = sum(stress(1:3))/3.d0
+            sdev = stress
+            sdev(1:3) = sdev(1:3)-p
+            smises = dsqrt( dot_product(sdev(1:3),sdev(1:3)) + 2.d0*dot_product(sdev(4:6),sdev(4:6)) )*dsqrt(1.5d0)
+            ! In the code below the strcmp( string1, string2, nchar) function returns true if the first nchar characters in strings match
+            do k = 1,n_field_variables
+                if (strcmp(field_variable_names(k),'S11',3) ) then
+                    nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) +&
+                     stress(1)*N(1:n_nodes)*determinant*w(kint)
+                else if (strcmp(field_variable_names(k),'S22',3) ) then
+                    nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) +&
+                     stress(2)*N(1:n_nodes)*determinant*w(kint)
+                else if (strcmp(field_variable_names(k),'S33',3) ) then
+                    nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) +&
+                     stress(3)*N(1:n_nodes)*determinant*w(kint)
+                else if (strcmp(field_variable_names(k),'S12',3) ) then
+                    nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) +&
+                     stress(4)*N(1:n_nodes)*determinant*w(kint)
+                else if (strcmp(field_variable_names(k),'S13',3) ) then
+                    nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) +&
+                     stress(5)*N(1:n_nodes)*determinant*w(kint)
+                else if (strcmp(field_variable_names(k),'S23',3) ) then
+                    nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) +&
+                     stress(6)*N(1:n_nodes)*determinant*w(kint)
+                else if (strcmp(field_variable_names(k),'SMISES',6) ) then
+                    nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) +&
+                     smises*N(1:n_nodes)*determinant*w(kint)
+                !            else if (strcmp(field_variable_names(k),'e11',3) ) then
+                !                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + (strain(1)+dstrain(1))
+                !            else if (strcmp(field_variable_names(k),'e22',3) ) then
+                !                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + (strain(2)+dstrain(2))
+                !            else if (strcmp(field_variable_names(k),'e33',3) ) then
+                !                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + (strain(3)+dstrain(3))
+                !            else if (strcmp(field_variable_names(k),'e12',3) ) then
+                !                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + (strain(4)+dstrain(4))/2
+                !            else if (strcmp(field_variable_names(k),'e13',3) ) then
+                !                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + (strain(5)+dstrain(5))/2
+                !            else if (strcmp(field_variable_names(k),'e23',3) ) then
+                !                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + (strain(6)+dstrain(6))/2
+                endif
+            end do
         end do
 
-    elseif (flag == 2) then
+    elseif (element_identifier == 1002) then
         ! For B_bar elements
-
-        !     --  Loop over integration points
-        do kint = 1, n_points
-        call calculate_shapefunctions(xi(1:3,kint),n_nodes,N,dNdxi)
-        dxdxi = matmul(x(1:3,1:n_nodes),dNdxi(1:n_nodes,1:3))
-        call invert_small(dxdxi,dxidx,determinant)
-        dNdx(1:n_nodes,1:3) = matmul(dNdxi(1:n_nodes,1:3),dxidx)
-
+        el_vol = 0.d0
+        dNbardx = 0.d0
         do intvol = 1,n_points
+
+            call calculate_shapefunctions(xi(1:3,intvol),n_nodes,N,dNdxi)
+            dxdxi = matmul(x(1:3,1:n_nodes),dNdxi(1:n_nodes,1:3))
+            call invert_small(dxdxi,dxidx,determinant)
+            dNdx(1:n_nodes,1:3) = matmul(dNdxi(1:n_nodes,1:3),dxidx)
             el_vol = el_vol + w(intvol)*determinant
             dNbardx(1:n_nodes,1:3) = dNbardx(1:n_nodes,1:3) + dNdx(1:n_nodes,1:3)*w(intvol)*determinant
 
@@ -573,76 +590,93 @@ subroutine fieldvars_linelast_3dbasic(lmn, element_identifier, n_nodes, node_pro
         end do
 
         dNbardx(1:n_nodes,1:3) = dNbardx(1:n_nodes,1:3)/el_vol
-!        write(6,*) dNbardx(1:n_nodes,1:3)
+!        write(6,*) dNbardx
 
-        B = 0.d0
-        B(1,1:3*n_nodes-2:3) = dNdx(1:n_nodes,1)
-        B(2,2:3*n_nodes-1:3) = dNdx(1:n_nodes,2)
-        B(3,3:3*n_nodes:3)   = dNdx(1:n_nodes,3)
-
-        B(4,1:3*n_nodes-2:3) = dNdx(1:n_nodes,2)
-        B(4,2:3*n_nodes-1:3) = dNdx(1:n_nodes,1)
-
-        B(5,1:3*n_nodes-2:3) = dNdx(1:n_nodes,3)
-        B(5,3:3*n_nodes:3)   = dNdx(1:n_nodes,1)
-
-        B(6,2:3*n_nodes-1:3) = dNdx(1:n_nodes,3)
-        B(6,3:3*n_nodes:3)   = dNdx(1:n_nodes,2)
-
-        B(1,1:3*n_nodes-2:3) = B(1,1:3*n_nodes-2:3) + (dNbardx(1:n_nodes,1)-dNdx(1:n_nodes,1))/3
-        B(1,2:3*n_nodes-2:3) = B(1,2:3*n_nodes-2:3) + (dNbardx(1:n_nodes,2)-dNdx(1:n_nodes,2))/3
-        B(1,3:3*n_nodes-2:3) = B(1,3:3*n_nodes-2:3) + (dNbardx(1:n_nodes,3)-dNdx(1:n_nodes,3))/3
-
-        B(2,1:3*n_nodes-2:3) = B(2,1:3*n_nodes-2:3) + (dNbardx(1:n_nodes,1)-dNdx(1:n_nodes,1))/3
-        B(2,2:3*n_nodes-2:3) = B(2,2:3*n_nodes-2:3) + (dNbardx(1:n_nodes,2)-dNdx(1:n_nodes,2))/3
-        B(2,3:3*n_nodes-2:3) = B(2,3:3*n_nodes-2:3) + (dNbardx(1:n_nodes,3)-dNdx(1:n_nodes,3))/3
-
-        B(3,1:3*n_nodes-2:3) = B(3,1:3*n_nodes-2:3) + (dNbardx(1:n_nodes,1)-dNdx(1:n_nodes,1))/3
-        B(3,2:3*n_nodes-2:3) = B(3,2:3*n_nodes-2:3) + (dNbardx(1:n_nodes,2)-dNdx(1:n_nodes,2))/3
-        B(3,3:3*n_nodes-2:3) = B(3,3:3*n_nodes-2:3) + (dNbardx(1:n_nodes,3)-dNdx(1:n_nodes,3))/3
+        !     --  Loop over integration points
+        do kint = 1, n_points
+            call calculate_shapefunctions(xi(1:3,kint),n_nodes,N,dNdxi)
+            dxdxi = matmul(x(1:3,1:n_nodes),dNdxi(1:n_nodes,1:3))
+            call invert_small(dxdxi,dxidx,determinant)
+            dNdx(1:n_nodes,1:3) = matmul(dNdxi(1:n_nodes,1:3),dxidx)
 
 
-        strain = matmul(B,dof_total)
-        dstrain = matmul(B,dof_increment)
-        stress = matmul(D,strain+dstrain)
-        p = sum(stress(1:3))/3.d0
-        sdev = stress
-        sdev(1:3) = sdev(1:3)-p
-        smises = dsqrt( dot_product(sdev(1:3),sdev(1:3)) + 2.d0*dot_product(sdev(4:6),sdev(4:6)) )*dsqrt(1.5d0)
-        ! In the code below the strcmp( string1, string2, nchar) function returns true if the first nchar characters in strings match
-        do k = 1,n_field_variables
-            if (strcmp(field_variable_names(k),'S11',3) ) then
-                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + stress(1)*N(1:n_nodes)*determinant*w(kint)
-            else if (strcmp(field_variable_names(k),'S22',3) ) then
-                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + stress(2)*N(1:n_nodes)*determinant*w(kint)
-            else if (strcmp(field_variable_names(k),'S33',3) ) then
-                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + stress(3)*N(1:n_nodes)*determinant*w(kint)
-            else if (strcmp(field_variable_names(k),'S12',3) ) then
-                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + stress(4)*N(1:n_nodes)*determinant*w(kint)
-            else if (strcmp(field_variable_names(k),'S13',3) ) then
-                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + stress(5)*N(1:n_nodes)*determinant*w(kint)
-            else if (strcmp(field_variable_names(k),'S23',3) ) then
-                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + stress(6)*N(1:n_nodes)*determinant*w(kint)
-            else if (strcmp(field_variable_names(k),'SMISES',6) ) then
-                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + smises*N(1:n_nodes)*determinant*w(kint)
-!            else if (strcmp(field_variable_names(k),'e11',3) ) then
-!                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + (strain(1)+dstrain(1))
-!            else if (strcmp(field_variable_names(k),'e22',3) ) then
-!                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + (strain(2)+dstrain(2))
-!            else if (strcmp(field_variable_names(k),'e33',3) ) then
-!                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + (strain(3)+dstrain(3))
-!            else if (strcmp(field_variable_names(k),'e12',3) ) then
-!                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + (strain(4)+dstrain(4))/2
-!            else if (strcmp(field_variable_names(k),'e13',3) ) then
-!                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + (strain(5)+dstrain(5))/2
-!            else if (strcmp(field_variable_names(k),'e23',3) ) then
-!                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + (strain(6)+dstrain(6))/2
-            endif
 
-        end do
+            !        write(6,*) dNbardx(1:n_nodes,1:3)
+
+            B = 0.d0
+            B(1,1:3*n_nodes-2:3) = dNdx(1:n_nodes,1)
+            B(2,2:3*n_nodes-1:3) = dNdx(1:n_nodes,2)
+            B(3,3:3*n_nodes:3)   = dNdx(1:n_nodes,3)
+
+            B(4,1:3*n_nodes-2:3) = dNdx(1:n_nodes,2)
+            B(4,2:3*n_nodes-1:3) = dNdx(1:n_nodes,1)
+
+            B(5,1:3*n_nodes-2:3) = dNdx(1:n_nodes,3)
+            B(5,3:3*n_nodes:3)   = dNdx(1:n_nodes,1)
+
+            B(6,2:3*n_nodes-1:3) = dNdx(1:n_nodes,3)
+            B(6,3:3*n_nodes:3)   = dNdx(1:n_nodes,2)
+
+            B(1,1:3*n_nodes-2:3) = B(1,1:3*n_nodes-2:3) + (dNbardx(1:n_nodes,1)-dNdx(1:n_nodes,1))/3
+            B(1,2:3*n_nodes-1:3) = B(1,2:3*n_nodes-1:3) + (dNbardx(1:n_nodes,2)-dNdx(1:n_nodes,2))/3
+            B(1,3:3*n_nodes:3) = B(1,3:3*n_nodes:3) + (dNbardx(1:n_nodes,3)-dNdx(1:n_nodes,3))/3
+
+            B(2,1:3*n_nodes-2:3) = B(2,1:3*n_nodes-2:3) + (dNbardx(1:n_nodes,1)-dNdx(1:n_nodes,1))/3
+            B(2,2:3*n_nodes-1:3) = B(2,2:3*n_nodes-1:3) + (dNbardx(1:n_nodes,2)-dNdx(1:n_nodes,2))/3
+            B(2,3:3*n_nodes:3) = B(2,3:3*n_nodes:3) + (dNbardx(1:n_nodes,3)-dNdx(1:n_nodes,3))/3
+
+            B(3,1:3*n_nodes-2:3) = B(3,1:3*n_nodes-2:3) + (dNbardx(1:n_nodes,1)-dNdx(1:n_nodes,1))/3
+            B(3,2:3*n_nodes-1:3) = B(3,2:3*n_nodes-1:3) + (dNbardx(1:n_nodes,2)-dNdx(1:n_nodes,2))/3
+            B(3,3:3*n_nodes:3) = B(3,3:3*n_nodes:3) + (dNbardx(1:n_nodes,3)-dNdx(1:n_nodes,3))/3
+
+            strain = matmul(B,dof_total)
+            dstrain = matmul(B,dof_increment)
+            stress = matmul(D,strain+dstrain)
+            p = sum(stress(1:3))/3.d0
+            sdev = stress
+            sdev(1:3) = sdev(1:3)-p
+            smises = dsqrt( dot_product(sdev(1:3),sdev(1:3)) + 2.d0*dot_product(sdev(4:6),sdev(4:6)) )*dsqrt(1.5d0)
+            ! In the code below the strcmp( string1, string2, nchar) function returns true if the first nchar characters in strings match
+            do k = 1,n_field_variables
+                if (strcmp(field_variable_names(k),'S11',3) ) then
+                    nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) +&
+                     stress(1)*N(1:n_nodes)*determinant*w(kint)
+                else if (strcmp(field_variable_names(k),'S22',3) ) then
+                    nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) +&
+                     stress(2)*N(1:n_nodes)*determinant*w(kint)
+                else if (strcmp(field_variable_names(k),'S33',3) ) then
+                    nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) +&
+                     stress(3)*N(1:n_nodes)*determinant*w(kint)
+                else if (strcmp(field_variable_names(k),'S12',3) ) then
+                    nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) +&
+                     stress(4)*N(1:n_nodes)*determinant*w(kint)
+                else if (strcmp(field_variable_names(k),'S13',3) ) then
+                    nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) +&
+                     stress(5)*N(1:n_nodes)*determinant*w(kint)
+                else if (strcmp(field_variable_names(k),'S23',3) ) then
+                    nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) +&
+                     stress(6)*N(1:n_nodes)*determinant*w(kint)
+                else if (strcmp(field_variable_names(k),'SMISES',6) ) then
+                    nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) +&
+                     smises*N(1:n_nodes)*determinant*w(kint)
+                !            else if (strcmp(field_variable_names(k),'e11',3) ) then
+                !                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + (strain(1)+dstrain(1))
+                !            else if (strcmp(field_variable_names(k),'e22',3) ) then
+                !                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + (strain(2)+dstrain(2))
+                !            else if (strcmp(field_variable_names(k),'e33',3) ) then
+                !                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + (strain(3)+dstrain(3))
+                !            else if (strcmp(field_variable_names(k),'e12',3) ) then
+                !                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + (strain(4)+dstrain(4))/2
+                !            else if (strcmp(field_variable_names(k),'e13',3) ) then
+                !                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + (strain(5)+dstrain(5))/2
+                !            else if (strcmp(field_variable_names(k),'e23',3) ) then
+                !                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + (strain(6)+dstrain(6))/2
+                endif
+
+            end do
         end do
     else
-    write(6,*) 'no vaild element identifier'
+        write(6,*) 'no vaild element identifier'
 
     end if
 

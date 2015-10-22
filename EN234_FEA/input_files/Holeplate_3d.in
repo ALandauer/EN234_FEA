@@ -15,7 +15,7 @@
 
        NODES
 %    The parameters are # of coords, # of DOF, and an optional integer identifier
-       PARAMETERS, 3, 3, 2
+       PARAMETERS, 3, 3, 1
 %      Specify which nodal DOF are displacements.  In the example, DOF 1 is the x displacement, 2 is the y displacement, 3 is the z displacement
        DISPLACEMENT DOF, 1, 2, 3
 %    Enter x,y,z coords of nodes.   The node number is optional, and is ignored in the code.
@@ -3669,11 +3669,11 @@ END NODES
 %     The parameters are no. nodes on the element, total no. state variables, integer identifier  
       ELEMENTS
 
-       PARAMETERS, 8, 0, 1001
+       PARAMETERS, 8, 0, 1002
 %       Define element properties - the values are passed to user subroutine elstif in the order they are listed here
 %       For the example provided, the params are Youngs Modulus, Poissons ratio 
         PROPERTIES
-         100.d0, 0.49d0
+         100.d0, 0.499d0
         END PROPERTIES
 %     Define mass density (for explicity dynamics only)
 %       DENSITY, 10.d0
@@ -6522,7 +6522,7 @@ END MESH
 %           element set, face #, SUBROUTINE, subroutine parameter name
 
         DISTRIBUTED LOADS
-          end_elements, 4, Value, 0.d0,1.d0,0.d0
+          end_elements, 4, Value,0.d0,-1.d0,0.d0
         END DISTRIBUTED LOADS
 
 %       The CONSTRAINTS key gives a way to enforce constraints between pairs or groups of nodes.
@@ -6555,7 +6555,7 @@ END MESH
 
 %   The CHECK STIFFNESS key tests the element subroutine to ensure that
 %   the residual force vector is consistent with the stiffness
-       CHECK STIFFNESS, 1001
+       CHECK STIFFNESS, 1002
        
        
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Analysis %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -6590,9 +6590,9 @@ END MESH
 %                        UNSYMMETRIC  (optional - only for unsymmetric stiffness)
 
 
-         SOLVER, DIRECT, LINEAR, UNSYMMETRIC
+         SOLVER, DIRECT, LINEAR
 
-         PRINT STATE, Output_files\contourplots_Hbb.dat
+         PRINT STATE, Output_files\contourplots_Hlk.dat
             DEGREES OF FREEDOM
             FIELD VARIABLES,S11,S22,S33,S12,S13,S23
             DISPLACED MESH

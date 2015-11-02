@@ -70,9 +70,9 @@ program en234fea
 
 !  Homework 5, small-strain B bar element - test with same files as in HW3, but
 !  try approaching incompressible limit by making Poisson's ratio close to 0.5
-  infil = './input_files/Holeplate_3d.in'
+  infil = './input_files/Linear_elastic_3d_hypo.in'
   open (unit = IOR, file = infil, status = 'old', ERR=500)
-  outfil = './Output_files/Holeplate_3d.out'
+  outfil = './Output_files/Linear_elastic_3d_hypo.out'
   open (UNIT = IOW, FILE = outfil, STATUS = 'unknown', ERR=500)
 
 !  infil = './input_files/Linear_elastic_3d.in'

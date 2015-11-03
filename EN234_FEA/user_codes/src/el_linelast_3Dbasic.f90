@@ -247,6 +247,17 @@ subroutine el_linelast_3dbasic_dynamic(lmn, element_identifier, n_nodes, node_pr
     use Element_Utilities, only : calculate_shapefunctions
     use Element_Utilities, only : invert_small
     implicit none
+!!!!!!!!!!!!!!!!!!!!
+!
+!
+!
+!  Not currently updated for b-bar and hypoelasticity
+!
+!
+!
+!
+!!!!!!!!!!!!
+
 
     integer, intent( in )         :: lmn                                                    ! Element number
     integer, intent( in )         :: element_identifier                                     ! Flag identifying element type (specified in .in file)
@@ -704,6 +715,8 @@ subroutine calc_S_and_D(lmn, element_identifier, n_nodes, &  ! Input variables
         dstrain_e,strain_0
     !    integer :: ij
 
+
+    !mat props
     D1 = 0.d0
     D1(1,1) = 2.d0
     D1(2,2) = 2.d0
@@ -723,6 +736,8 @@ subroutine calc_S_and_D(lmn, element_identifier, n_nodes, &  ! Input variables
     n = element_properties(3)
     K = element_properties(4)
 
+    eps = 0.d0
+    eps_e = 0.d0
 
     !Calculate D matrix coeff variable values
     eps = strain+dstrain
@@ -736,14 +751,8 @@ subroutine calc_S_and_D(lmn, element_identifier, n_nodes, &  ! Input variables
     write(6,*) eps_e
 
     e = eps - 1/3*(eps(1)+eps(2)+eps(3)+eps(4)+eps(5)+eps(6))
-
     e_dyadic_e = spread(e,dim=2,ncopies=6)*spread(e,dim=1,ncopies=6)
-
     sum_eps = sum(eps**2)
-
-
-
-    !mat props:
 
     !calculate elastic stress
     if (eps_e >= strain_0) then
@@ -766,6 +775,7 @@ subroutine calc_S_and_D(lmn, element_identifier, n_nodes, &  ! Input variables
 
     !    write(6,*) eps_e,stress_e,dstress_e
 
+    !stress vector
     stress(1) = 2/3*stress_e*e(1)/eps_e + K*(eps(1)+eps(2)+eps(3)+&
         eps(4)+eps(5)+eps(6))
     stress(2) = 2/3*stress_e*e(2)/eps_e + K*(eps(1)+eps(2)+eps(3)+&

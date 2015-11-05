@@ -30,7 +30,7 @@ module Element_Utilities
     real (prec) :: jacobian_2D(2,2)
     real (prec) :: jacobian_3D(3,3)
   
-  
+    real (prec) :: symvec(6)
 
 
 

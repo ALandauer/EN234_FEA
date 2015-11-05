@@ -4131,7 +4131,7 @@ END NODES
 %     The parameters are no. nodes on the element, total no. state variables, integer identifier  
       ELEMENTS
 
-       PARAMETERS, 8, 0, 1002
+       PARAMETERS, 8, 0, 1003
 %       Define element properties - the values are passed to user subroutine elstif in the order they are listed here
 %       For the example provided, the params are Youngs Modulus, Poissons ratio and thermal expansion coeft
         PROPERTIES
@@ -7322,7 +7322,7 @@ END MESH
 
 %   The CHECK STIFFNESS key tests the element subroutine to ensure that
 %   the residual force vector is consistent with the stiffness
-%       CHECK STIFFNESS, 1001
+       CHECK STIFFNESS, 1003
 
 %    STOP
 
@@ -7364,9 +7364,9 @@ END MESH
 
 
 
-         PRINT STATE, Output_files\contourplots.dat
+         PRINT STATE, Output_files\contourplots_hyper_holeplate.dat
 %            DEGREES OF FREEDOM
-            FIELD VARIABLES, S11,S22,S33,S12,S13,S23
+            FIELD VARIABLES, S11,S22,S33,S12,S13,S23,SMISES,P1,P2,P3
             DISPLACED MESH
             DISPLACEMENT SCALE FACTOR, 1.d0
          END PRINT STATE

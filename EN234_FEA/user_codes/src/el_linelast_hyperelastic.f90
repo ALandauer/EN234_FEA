@@ -374,7 +374,7 @@ subroutine fieldvars_linelast_hyperelastic(lmn, element_identifier, n_nodes, nod
     !    call extract_node_data(nn,flag,n_coords,nodal_coords,n_dof,nodal_dof_increment,nodal_dof_total)
     call initialize_integration_points(n_points, n_nodes, xi, w)
 
-     Ivec = 0.d0
+    Ivec = 0.d0
     Ivec(1) = 1.d0
     Ivec(2) = 1.d0
     Ivec(3) = 1.d0
@@ -384,6 +384,7 @@ subroutine fieldvars_linelast_hyperelastic(lmn, element_identifier, n_nodes, nod
     D = 0.d0
     mu1 = element_properties(1)
     K1 = element_properties(2)
+!    write(6,*) mu1,K1
     u = 0.d0
     u = reshape(dof_increment+dof_total,(/3,n_nodes/))
 
@@ -410,7 +411,7 @@ subroutine fieldvars_linelast_hyperelastic(lmn, element_identifier, n_nodes, nod
             end do
         end do
 
-        !write(6,*) F
+!        write(6,*) F
         !J = determinate(F)
         B_def = matmul(F,transpose(F))
         call invert_small(F,Finv,J)
@@ -436,7 +437,7 @@ subroutine fieldvars_linelast_hyperelastic(lmn, element_identifier, n_nodes, nod
         B(5,3:3*n_nodes:3)   = dNdy(1:n_nodes,1)
         B(6,2:3*n_nodes-1:3) = dNdy(1:n_nodes,3)
         B(6,3:3*n_nodes:3)   = dNdy(1:n_nodes,2)
-!write(6,*) B
+!write(6,*) B_def
         !Find the G matrix from the left cauchy def. tensor
         G = 0.d0
         G(1,1) = 2*B_def(1,1)
@@ -510,12 +511,13 @@ subroutine fieldvars_linelast_hyperelastic(lmn, element_identifier, n_nodes, nod
         eye6(6,6) = 0.5
 
         !Find Kirchoff stress
-        do ii = 1,3
-            do jj = 1,3
-                tau(ii,jj)  = mu1*(B_def(ii,jj) - Bkk*eye(ii,jj)/3.d0)/(J**(2.d0/3.d0)) + K1*J*(J-1.d0)*eye(ii,jj)
-            end do
-        end do
-
+        tau = 0.d0
+!        do ii = 1,3
+!            do jj = 1,3
+                tau(1:3,1:3)  = mu1/(J**(2.d0/3.d0))*(B_def - Bkk*eye/3.d0) + K1*J*(J-1.d0)*eye
+!            end do
+!        end do
+!write(6,*) tau
         !Find D
         D = mu1/(J**(2.d0/3.d0))*eye6 + mu1/(3.d0*J**(2.d0/3.d0))*(Bkk/3.d0*spread(Ivec,dim=2,ncopies=6)* &
             spread(Bvec_inv,dim=1,ncopies=6) - spread(Ivec,dim=2,ncopies=6)*spread(Ivec,dim=1,ncopies=6) &

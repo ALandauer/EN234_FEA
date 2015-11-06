@@ -61,7 +61,7 @@ subroutine el_linelast_3dbasic(lmn, element_identifier, n_nodes, node_property_l
     integer      :: n_points,kint,intvol
 
     real (prec)  ::  strain(6), dstrain(6)             ! Strain vector contains [e11, e22, e33, 2e12, 2e13, 2e23]
-    real (prec)  ::  stress(6), dstress(6)                       ! Stress vector contains [s11, s22, s33, s12, s13, s23]
+    real (prec)  ::  stress(6), dstress(6)             ! Stress vector contains [s11, s22, s33, s12, s13, s23]
     real (prec)  ::  D(6,6)                            ! stress = D*(strain+dstrain)  (NOTE FACTOR OF 2 in shear strain)
     real (prec)  ::  B(6,length_dof_array)             ! strain = B*(dof_total+dof_increment)
     real (prec)  ::  dxidx(3,3), determinant           ! Jacobian inverse and determinant
@@ -134,7 +134,7 @@ subroutine el_linelast_3dbasic(lmn, element_identifier, n_nodes, node_property_l
 
                 call calc_S_and_D(lmn, element_identifier, n_nodes, &  ! Input variables
                     n_properties,element_properties,length_coord_array, &         ! Input variables
-                    dof_increment, dof_total, length_dof_array,D,stress,dstress,strain,dstrain)
+                    dof_increment, dof_total, length_dof_array,D,stress,strain,dstrain)
             else
                 !                strain = matmul(B,dof_total)
                 !                dstrain = matmul(B,dof_increment)
@@ -657,7 +657,7 @@ end subroutine fieldvars_linelast_3dbasic
 
 subroutine calc_S_and_D(lmn, element_identifier, n_nodes, &  ! Input variables
     n_properties,element_properties,length_coord_array, &         ! Input variables
-    dof_increment, dof_total, length_dof_array,D,stress,dstress,strain,dstrain)!,  & ! Input variables
+    dof_increment, dof_total, length_dof_array,D,stress,strain,dstrain)!,  & ! Input variables
     !    n_state_variables, initial_state_variables,updated_state_variables, &        ! Input variables
     !    n_field_variables,field_variable_names, &                                    ! Field variable definition
     !    nodal_fieldvariables)      ! Output variables
@@ -699,7 +699,7 @@ subroutine calc_S_and_D(lmn, element_identifier, n_nodes, &  ! Input variables
     real( prec ), intent( in )    :: strain(6)             ! total strain
     real( prec ), intent( inout ) :: stress(6)             ! total strain
     real( prec ), intent( in )    :: dstrain(6)            ! step of strain
-    real( prec ), intent( in )    :: dstress(6)           ! step of stress
+!    real( prec ), intent( in )    :: dstress(6)           ! step of stress
     !    real( prec ), intent( out )   :: nodal_fieldvariables(n_field_variables,n_nodes)        ! Nodal field variables
     !   real( prec ), intent( inout ) :: D
 
@@ -726,10 +726,12 @@ subroutine calc_S_and_D(lmn, element_identifier, n_nodes, &  ! Input variables
     D1(6,6) = 1.d0
 
     D2 = 0.d0
-    D2(1:3,1:3) = 2.d0
+    D2(1:3,1:3) = 1.d0
 
     dstrain_e = 0.d0
     stress = 0.d0
+    dstress_e = 0.d0
+    stress_e = 0.d0
 
     stress_0 = element_properties(1)
     strain_0 = element_properties(2)
@@ -741,52 +743,56 @@ subroutine calc_S_and_D(lmn, element_identifier, n_nodes, &  ! Input variables
 
     !Calculate D matrix coeff variable values
     eps = strain+dstrain
-    eps(4:6) = eps(4:6)/2
-    eps_e = sqrt(2/3*(eps(1)**2+eps(2)**2+eps(3)**2+eps(4)**2+&
-        eps(5)**2+eps(6)**2))
+    eps(4:6) = eps(4:6)/2.d0
+    eps_e = sqrt(2.d0/3.d0*(eps(1)**2.d0+eps(2)**2.d0+eps(3)**2.d0+eps(4)**2.d0+&
+        eps(5)**2.d0+eps(6)**2.d0))
 
-    dstrain_e = sqrt(2/3*(dstrain(1)**2+dstrain(2)**2+dstrain(3)**2+&
-        dstrain(4)**2+dstrain(5)**2+dstrain(6)**2))
+    dstrain_e = sqrt(2.d0/3.d0*(dstrain(1)**2.d0+dstrain(2)**2.d0+dstrain(3)**2.d0+&
+        dstrain(4)**2.d0+dstrain(5)**2.d0+dstrain(6)**2.d0))
 
-    write(6,*) eps_e
+!write(6,*) eps_e
 
-    e = eps - 1/3*(eps(1)+eps(2)+eps(3)+eps(4)+eps(5)+eps(6))
+    e = 0.d0
+    e_dyadic_e = 0.d0
+    sum_eps = 0.d0
+    e = eps - 1.d0/3.d0*(eps(1)+eps(2)+eps(3)+eps(4)+eps(5)+eps(6))
     e_dyadic_e = spread(e,dim=2,ncopies=6)*spread(e,dim=1,ncopies=6)
-    sum_eps = sum(eps**2)
+    sum_eps = sum(eps**2.d0)
 
     !calculate elastic stress
     if (eps_e >= strain_0) then
 
         stress_e = (stress_0)*&
-            (eps_e/strain_0)**1/n
+            (eps_e/strain_0)**1.d0/n
 
         dstress_e = (stress_0)*&
-            (dstrain_e/strain_0)**1/n
+            (dstrain_e/strain_0)**1.d0/n
 
     else
 
         stress_e = (stress_0)*&
-            (sqrt((1+n**2)/(n-1)**2-(n/(n-1)-eps_e/n)**2)-1/(n-1))
+            (sqrt((1+n**2)/(n-1)**2-(n/(n-1)-eps_e/n)**2.d0)-1.d0/(n-1))
 
         dstress_e = (stress_0)*&
-            (sqrt((1+n**2)/(n-1)**2-(n/(n-1)-dstrain_e/strain_0)**2)-1/(n-1))
+            (sqrt((1.d0+n**2.d0)/(n-1.d0)**2.d0-&
+            (n/(n-1.d0)-dstrain_e/strain_0)**2.d0)-1.d0/(n-1.d0))
 
     end if
 
     !    write(6,*) eps_e,stress_e,dstress_e
 
     !stress vector
-    stress(1) = 2/3*stress_e*e(1)/eps_e + K*(eps(1)+eps(2)+eps(3)+&
+    stress(1) = 2.d0/3.d0*stress_e*e(1)/eps_e + K*(eps(1)+eps(2)+eps(3)+&
         eps(4)+eps(5)+eps(6))
-    stress(2) = 2/3*stress_e*e(2)/eps_e + K*(eps(1)+eps(2)+eps(3)+&
+    stress(2) = 2.d0/3.d0*stress_e*e(2)/eps_e + K*(eps(1)+eps(2)+eps(3)+&
         eps(4)+eps(5)+eps(6))
-    stress(3) = 2/3*stress_e*e(3)/eps_e + K*(eps(1)+eps(2)+eps(3)+&
+    stress(3) = 2.d0/3.d0*stress_e*e(3)/eps_e + K*(eps(1)+eps(2)+eps(3)+&
         eps(4)+eps(5)+eps(6))
-    stress(4) = 2/3*stress_e*e(4)/eps_e + K*(eps(1)+eps(2)+eps(3)+&
+    stress(4) = 2.d0/3.d0*stress_e*e(4)/eps_e + K*(eps(1)+eps(2)+eps(3)+&
         eps(4)+eps(5)+eps(6))
-    stress(5) = 2/3*stress_e*e(5)/eps_e + K*(eps(1)+eps(2)+eps(3)+&
+    stress(5) = 2.d0/3.d0*stress_e*e(5)/eps_e + K*(eps(1)+eps(2)+eps(3)+&
         eps(4)+eps(5)+eps(6))
-    stress(6) = 2/3*stress_e*e(6)/eps_e + K*(eps(1)+eps(2)+eps(3)+&
+    stress(6) = 2.d0/3.d0*stress_e*e(6)/eps_e + K*(eps(1)+eps(2)+eps(3)+&
         eps(4)+eps(5)+eps(6))
 
 
@@ -798,7 +804,7 @@ subroutine calc_S_and_D(lmn, element_identifier, n_nodes, &  ! Input variables
         E_t = E_s
 
         !calculate D matrix
-        D(1:6,1:6) = E_s/2*D1 + (K-2*E_s/9)*D2
+        D(1:6,1:6) = E_s/3.d0*D1 + (K-2.d0*E_s/9.d0)*D2
 
     else
 
@@ -806,13 +812,13 @@ subroutine calc_S_and_D(lmn, element_identifier, n_nodes, &  ! Input variables
         E_t = dstress_e/dstrain_e
 
         !calculate D matrix
-        D(1:6,1:6) = 4/9*(eps_e**2)*(E_t - E_s)*e_dyadic_e + E_s/2*D1+&
-            (K-2*E_s/9)*D2
+        D(1:6,1:6) = 4.d0/9.d0*(eps_e**2.d0)*(E_t - E_s)*e_dyadic_e + E_s/2*D1+&
+            (K-2.d0*E_s/9.d0)*D2
 
     end if
 
 
-!    write(6,*) stress,D
+write(6,*) D
 
 
 end subroutine calc_S_and_D

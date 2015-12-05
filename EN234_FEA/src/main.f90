@@ -72,10 +72,10 @@ program en234fea
     !  try approaching incompressible limit by making Poisson's ratio close to 0.5
 
     !  Homework 6 hypoelasticity
-    !  infil = './input_files/Linear_elastic_3d_hypo.in'
-    !  open (unit = IOR, file = infil, status = 'old', ERR=500)
-    !  outfil = './Output_files/Linear_elastic_3d_hypo.out'
-    !  open (UNIT = IOW, FILE = outfil, STATUS = 'unknown', ERR=500)
+      infil = './input_files/Linear_elastic_3d_hypo.in'
+      open (unit = IOR, file = infil, status = 'old', ERR=500)
+      outfil = './Output_files/Linear_elastic_3d_hypo.out'
+      open (UNIT = IOW, FILE = outfil, STATUS = 'unknown', ERR=500)
 
     !  infil = './input_files/Linear_elastic_3d.in'
     !  open (unit = IOR, file = infil, status = 'old', ERR=500)
@@ -127,10 +127,10 @@ program en234fea
 !    outfil = './Output_files/notch_fracture_dynamic.out'
 !    open (UNIT = IOW, FILE = outfil, STATUS = 'unknown', ERR=500)
 
-    infil = './input_files/Gurson_3d_dynamic.in'
-    open (unit = IOR, file = infil, status = 'old', ERR=500)
-    outfil = './Output_files/Gurson_3d_dynamic.out'
-    open (UNIT = IOW, FILE = outfil, STATUS = 'unknown', ERR=500)
+!    infil = './input_files/Gurson_3d_dynamic.in'
+!    open (unit = IOR, file = infil, status = 'old', ERR=500)
+!    outfil = './Output_files/Gurson_3d_dynamic.out'
+!    open (UNIT = IOW, FILE = outfil, STATUS = 'unknown', ERR=500)
 
     call read_input_file
   

@@ -127,7 +127,7 @@ subroutine el_linelast_3dbasic(lmn, element_identifier, n_nodes, node_property_l
             strain = matmul(B,dof_total)
             dstrain = matmul(B,dof_increment)
 
-            !            write(6,*) strain,dstrain
+write(6,*) dstrain
 
             if (size(element_properties) .eq. 4) then
 
@@ -155,7 +155,6 @@ subroutine el_linelast_3dbasic(lmn, element_identifier, n_nodes, node_property_l
             call calculate_shapefunctions(xi(1:3,intvol),n_nodes,N,dNdxi)
             dxdxi = matmul(x(1:3,1:n_nodes),dNdxi(1:n_nodes,1:3))
             call invert_small(dxdxi,dxidx,determinant)
-            !            write(6,*) w(intvol)
             dNdx(1:n_nodes,1:3) = matmul(dNdxi(1:n_nodes,1:3),dxidx)
             el_vol = el_vol + w(intvol)*determinant
             dNbardx(1:n_nodes,1:3) = dNbardx(1:n_nodes,1:3) + dNdx(1:n_nodes,1:3)*w(intvol)*determinant
@@ -605,6 +604,7 @@ subroutine fieldvars_linelast_3dbasic(lmn, element_identifier, n_nodes, node_pro
 
             strain = matmul(B,dof_total)
             dstrain = matmul(B,dof_increment)
+write(6,*) dstrain
 
             !            write(6,*) strain,dstrain
 
@@ -827,19 +827,17 @@ subroutine calc_S_and_D(lmn, element_identifier, n_nodes, &  ! Input variables
     !   real( prec ), intent( inout ) :: D
 
     ! Local Variables
-    real (prec), dimension(6,6)  ::  D1
-    real (prec), dimension(6,6)  ::  D2
+    real (prec), dimension(6,6)  ::  D1(6,6)
+    real (prec), dimension(6,6)  ::  D2(6,6)
     !    real (prec)  ::  total_strain(6)
     real (prec)  ::  e_dyadic_e(6,6)
     real (prec)  ::  e(6),e_05(6),deps(6),deps_e,de_05(6),de(6)
     real (prec)  ::  eps(6),eps_05(6),deps_05(6)
     real (prec), intent(out) ::  D(6,6)
-    real (prec)  ::  K,E_s,E_t,eps_e,sum_eps,stress_e,stress_0,n,dstress_e,&
+    real (prec)  ::  K,E_s,E_t,eps_e,sum_strain,stress_e,stress_0,n,dstress_e,&
         dstrain_e,strain_0
     !    integer :: ij
 
-
-    !mat props
     D1 = 0.d0
     D1(1,1) = 2.d0
     D1(2,2) = 2.d0
@@ -855,6 +853,9 @@ subroutine calc_S_and_D(lmn, element_identifier, n_nodes, &  ! Input variables
     stress = 0.d0
     dstress_e = 0.d0
     stress_e = 0.d0
+
+    !mat props
+
 
     stress_0 = element_properties(1)
     strain_0 = element_properties(2)
@@ -878,25 +879,32 @@ subroutine calc_S_and_D(lmn, element_identifier, n_nodes, &  ! Input variables
     deps_05 = deps
     deps_05(4:6) = deps_05(4:6)/2.d0
 
-    eps_e = sqrt(2.d0/3.d0*(eps(1)**2.d0+eps(2)**2.d0+eps(3)**2.d0+eps(4)**2.d0+&
-        eps(5)**2.d0+eps(6)**2.d0))
-
-    deps_e = sqrt(2.d0/3.d0*(deps(1)**2.d0+deps(2)**2.d0+deps(3)**2.d0+&
-        deps(4)**2.d0+deps(5)**2.d0+deps(6)**2.d0))
-
     !write(6,*) eps_e
 
     e = 0.d0
     e_05 = 0.d0
     e_dyadic_e = 0.d0
-    sum_eps = 0.d0
-    e = eps - 1.d0/3.d0*(eps(1)+eps(2)+eps(3))
-    de = deps - 1.d0/3.d0*(deps(1)+deps(2)+deps(3))
-    e_05 = eps_05 - 1.d0/3.d0*(eps_05(1)+eps_05(2)+eps_05(3))
-    de_05 = deps_05 - 1.d0/3.d0*(deps_05(1)+deps_05(2)+deps_05(3))
-    e_dyadic_e = spread(e_05,dim=2,ncopies=6)*spread(e_05,dim=1,ncopies=6)
-    sum_eps = sqrt(sum(eps**2.d0))
+    sum_strain = 0.d0
 
+    e(1:3) = eps(1:3) - 1.d0/3.d0*(eps(1)+eps(2)+eps(3))
+    e(4:6) = eps(4:6)
+    de(1:3) = deps(1:3) - 1.d0/3.d0*(deps(1)+deps(2)+deps(3))
+    de(4:6) = deps(4:6)
+    e_05(1:3) = eps_05(1:3) - 1.d0/3.d0*(eps_05(1)+eps_05(2)+eps_05(3))
+    e_05(4:6) = eps_05(4:6)
+    de_05(1:3) = deps_05(1:3) - 1.d0/3.d0*(deps_05(1)+deps_05(2)+deps_05(3))
+    de_05(4:6) = deps_05(4:6)
+    e_dyadic_e = spread(e_05,dim=2,ncopies=6)*spread(e_05,dim=1,ncopies=6)
+    sum_strain = sqrt(sum(strain**2.d0))
+
+    eps_e = sqrt(2.d0/3.d0*(e_05(1)**2.d0+e_05(2)**2.d0+e_05(3)**2.d0+e_05(4)**2.d0+&
+        e_05(5)**2.d0+e_05(6)**2.d0+e_05(4)**2.d0+e_05(5)**2.d0+e_05(6)**2.d0))
+
+    deps_e = sqrt(2.d0/3.d0*(de_05(1)**2.d0+de_05(2)**2.d0+de_05(3)**2.d0+&
+        de_05(4)**2.d0+de_05(5)**2.d0+de_05(6)**2.d0+de_05(4)**2.d0+&
+        de_05(5)**2.d0+de_05(6)**2.d0))
+
+!write(6,*) deps_e
     !write(6,*) strain_0,eps_e
     !write(6,*) sum_eps
 
@@ -904,15 +912,16 @@ subroutine calc_S_and_D(lmn, element_identifier, n_nodes, &  ! Input variables
     if (eps_e >= strain_0) then
 
         stress_e = (stress_0)*&
-            (eps_e/strain_0)**1.d0/n
+            (eps_e/strain_0)**(1.d0/n)
 
         dstress_e = (stress_0)*&
-            (deps_e/strain_0)**1.d0/n
+            (deps_e/strain_0)**(1.d0/n)
 
     else
 
         stress_e = (stress_0)*&
-            (sqrt((1.d0+n**2.d0)/(n-1.d0)**2.d0 - (n/(n-1.d0)-eps_e/n)**2.d0)-1.d0/(n-1.d0))
+            (sqrt((1.d0+n**2.d0)/((n-1.d0)**2.d0) -&
+            (n/(n-1.d0)-eps_e/strain_0)**2.d0)-1.d0/(n-1.d0))
 
         dstress_e = (stress_0)*&
             (sqrt((1.d0+n**2.d0)/((n-1.d0)**2.d0)-&
@@ -926,16 +935,17 @@ subroutine calc_S_and_D(lmn, element_identifier, n_nodes, &  ! Input variables
     stress(1) = 2.d0/3.d0*stress_e*e(1)/eps_e + K*(eps(1)+eps(2)+eps(3))
     stress(2) = 2.d0/3.d0*stress_e*e(2)/eps_e + K*(eps(1)+eps(2)+eps(3))
     stress(3) = 2.d0/3.d0*stress_e*e(3)/eps_e + K*(eps(1)+eps(2)+eps(3))
-    stress(4) = 2.d0/3.d0*stress_e*e(4)/eps_e + K*(eps(1)+eps(2)+eps(3))
-    stress(5) = 2.d0/3.d0*stress_e*e(5)/eps_e + K*(eps(1)+eps(2)+eps(3))
-    stress(6) = 2.d0/3.d0*stress_e*e(6)/eps_e + K*(eps(1)+eps(2)+eps(3))
+    stress(4) = 2.d0/3.d0*stress_e*e(4)/eps_e! + K*(eps(1)+eps(2)+eps(3))
+    stress(5) = 2.d0/3.d0*stress_e*e(5)/eps_e! + K*(eps(1)+eps(2)+eps(3))
+    stress(6) = 2.d0/3.d0*stress_e*e(6)/eps_e! + K*(eps(1)+eps(2)+eps(3))
 
     !check for the zero strain case
-    if (sum_eps == 0.d0) then
+    if (sum_strain == 0.d0) then
 
         stress = 0.d0
-        E_s = 1.d0 !stress_0/strain_0 !dstress_e/deps_e
-        E_t = E_s
+        E_s = dstress_e/deps_e !stress_0/strain_0 !dstress_e/deps_e
+!write(6,*) E_s
+!        E_t =
 
         !calculate D matrix
         D(1:6,1:6) = E_s/3.d0*D1 + (K-2.d0*E_s/9.d0)*D2
@@ -952,12 +962,9 @@ subroutine calc_S_and_D(lmn, element_identifier, n_nodes, &  ! Input variables
             (K-2.d0*E_s/9.d0)*D2
 
         !        write(6,*) E_s
-        write(6,*) D
+!        write(6,*) D
 
     end if
-
-
-
 
 
 end subroutine calc_S_and_D
@@ -1009,7 +1016,6 @@ subroutine gurson(element_properties,n_properties,n_state_variables,initial_stat
 
     taun = 0.d0
 
-
     stressR = 0.d0
     taun(1,1) = stress0(1)
     taun(2,2) = stress0(2)
@@ -1043,8 +1049,6 @@ subroutine gurson(element_properties,n_properties,n_state_variables,initial_stat
     else
         f_star = fc+(fF_bar-fc)/(fF-fc)*(Vf-fc)
     end if
-
-
 
     dee = 0.d0
     dev = 0.d0

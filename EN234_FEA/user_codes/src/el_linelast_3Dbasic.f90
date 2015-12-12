@@ -1036,15 +1036,16 @@ subroutine gurson(element_properties,n_properties,n_state_variables,initial_stat
     de = 0.d0
     Ss = 0.d0
     tauDn = 0.d0
+    Se_star = 0.d0
 
     do i = 1,3
         do j = 1,3
 
-            tauDn(i,j) = taun(i,j) - 1.d0/3.d0*sum(stress1(1:3))
-
             if (i==j) then
+                tauDn(i,j) = taun(i,j) - 1.d0/3.d0*sum(stress1(1:3))
                 de(i,j) = dstrain(i,j) - (dstrain(1,1)+dstrain(2,2)+dstrain(3,3))/3.d0
             else
+                tauDn(i,j) = taun(i,j)
                 de(i,j) = dstrain(i,j)
             end if
 

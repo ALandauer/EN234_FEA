@@ -42,7 +42,7 @@
 %       Define element properties - the values are passed to user subroutine elstif in the order they are listed here
 
        PROPERTIES
-        1.0d0, 0.01d0,10,1000
+        1.0d0, 0.01d0,10.d0,1000.d0
        END PROPERTIES
 %        PROPERTIES
 %         100.d0, 0.3d0
@@ -150,7 +150,7 @@
 %   the residual force vector is consistent with the stiffness
        CHECK STIFFNESS, 1001
 
-STOP
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Analysis %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

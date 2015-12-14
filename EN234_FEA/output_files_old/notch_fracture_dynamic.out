@@ -1,0 +1,18 @@
+
+
+ The input file has been read successfully 
+ Number of elements:             2960
+ Number of nodes:                4014
+ Number of constraints:             0
+ Total no. degrees of freedom:  12042
+
+
+  Started explicit dynamic analysis 
+
+
+  
+   Step            1  completed
+   Elapsed time is    0.0000000000000000     
+   Printing state... 
+  Error in element utility invert
+  A 3x3 matrix has a zero determinant

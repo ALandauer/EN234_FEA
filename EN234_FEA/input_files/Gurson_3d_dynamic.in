@@ -41,9 +41,9 @@
 %       Define element properties - the values are passed to user subroutine elstif in the order they are listed here
         PROPERTIES
          1000.d0, 0.3d0   % E, nu
-         0.8d0, 10.01d0, 5.d0  % Y, edot0, m
+         8000d0, 0.01d0, 5.d0  % Y, edot0, m
          1.25d0, 1.d0, 1.25d0  % q1, q2, q3
-         0.05d0, 0.1d0, 0.05d0  % fn, sn, en
+         0.0d0, 0.05d0, 0.05d0  % fn, sn, en
          0.15d0, 0.25d0  % fc, ff
         END PROPERTIES
 %     Define mass density (for explicity dynamics only)
@@ -116,9 +116,9 @@
 %        All parameters are required
 
           TIME STEP, 0.01
-          NUMBER OF STEPS, 200
-          STATE PRINT STEPS, 10
-          USER PRINT STEPS, 210
+          NUMBER OF STEPS, 20
+          STATE PRINT STEPS, 5
+          USER PRINT STEPS, 21
 
 
 %      This prints the DOF values and projected nodal state for all solid elements to a tecplot readable file
@@ -127,7 +127,7 @@
 %         The projected states are controlled by the user - see subroutine elstat in file usrelem.f90
 %         Also (for this example file) subroutine state_linelast_3dbasic in file el_linelast_3Dbasic.f90
 %         In this example the states are the stresses sxx,syy,szz,sxy,sxz,syz
-         PRINT STATE, Output_files\contourplots.dat
+         PRINT STATE, Output_files\contourplots_gurson.dat
             DEGREES OF FREEDOM
             FIELD VARIABLES, S11,S22,S33,S12,S13,S23,ematrix,Vf
             DISPLACED MESH

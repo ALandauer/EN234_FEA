@@ -331,7 +331,7 @@ subroutine print_state
 
 
         ! Print solution to a file that may be read by TECPLOT
-
+!    write(6,*) ' Allocating memory'
     if (n_field_variables>0) then
         allocate(field_variables(n_field_variables,n_nodes), stat = status)
         allocate(auxiliary_field_variables(n_field_variables), stat=status)
@@ -349,7 +349,7 @@ subroutine print_state
         write(IOW,*) ' Unable to allocate storage for printing solution '
         stop
     endif
-
+!    write(6,*) ' Memory allocation completed'
     ! Find the first zone to print
     do izstart = 1,n_zones
         if (zone_print_flag(izstart)) exit
@@ -457,10 +457,10 @@ subroutine print_state
             if (n_field_variables>0) then                     ! Project field variables for current zone
 
                 field_variables = 0.d0
-
+!                     write(6,*) ' Field var projection'
                 call assemble_field_projection(zone_list(iz)%start_element,zone_list(iz)%end_element, &
                     n_field_variables,field_variable_names,field_variables)
-
+!                     write(6,*) ' Field vars assembled'
                 if (use_lumped_projection_matrix) then
                     lumped_projection_matrix = 0.d0
                     call assemble_projection_lumped_mass_matrix(zone_list(iz)%start_element,zone_list(iz)%end_element, &
@@ -760,10 +760,10 @@ subroutine print_state
             if (n_field_variables>0) then                     ! Project field variables for current zone
 
                 field_variables = 0.d0
-
+!                     write(6,*) ' Field var projection 2'
                 call assemble_field_projection(zone_list(iz)%start_element,zone_list(iz)%end_element, &
                     n_field_variables,field_variable_names,field_variables)
-
+!                write(6,*) ' Field var assembly complete'
                 if (use_lumped_projection_matrix) then
                     lumped_projection_matrix = 0.d0
                     call assemble_projection_lumped_mass_matrix(zone_list(iz)%start_element,zone_list(iz)%end_element, &
@@ -793,7 +793,7 @@ subroutine print_state
                 endif
 
             endif
-
+!            write(6,*) ' Projection complete'
             !   Write a header for separate zones
 
             node_numbers = 0
@@ -833,10 +833,11 @@ subroutine print_state
                     '" F=FEPOINT, I=', n_printable_nodes+n_auxiliary_nodes, ' J=', n_printable_elements,' ET=BRICK'
             endif
 
-
+!                write(6,*)  ' Printing nodes'
 
             ! Print the nodes
             do lmn = zone_list(iz)%start_element,zone_list(iz)%end_element
+!                 write(6,*) ' Element ',lmn
                 if (element_deleted(lmn)) cycle
                 do k = 1,element_list(lmn)%n_nodes
                     n = connectivity(element_list(lmn)%connect_index + k-1)
@@ -990,7 +991,7 @@ subroutine print_state
                 endif
             end do
 
-    
+!            write(6,*) ' Printing elements'
             node_numbers = -node_numbers             ! Remove the - flag that suppresses duplicate prints from node numbers
 
             ! Print the elements
@@ -1076,7 +1077,7 @@ subroutine print_state
         end do
 
     endif
-
+!    write(6,*) ' Deallocating memory in print state'
     if (n_field_variables>0) then
         deallocate(field_variables)
         deallocate(auxiliary_field_variables)
@@ -1454,6 +1455,7 @@ subroutine assemble_field_projection(start_element,end_element,n_field_variables
         if (iof==0) iof = 1
         ns = element_list(lmn)%n_states
 
+!        write(6,*) ' Calling field projection user element ',lmn
         call user_element_fieldvariables(lmn, element_list(lmn)%flag, element_list(lmn)%n_nodes, &
             local_nodes(1:element_list(lmn)%n_nodes), &       ! Input variables
             element_list(lmn)%n_element_properties, element_properties(element_list(lmn)%element_property_index),  &  ! Input variables
@@ -1469,12 +1471,12 @@ subroutine assemble_field_projection(start_element,end_element,n_field_variables
         end do
 
     end do
-   
+!    write(6,*) ' Deallocating memory'
     deallocate(element_coords)
     deallocate(element_dof_increment)
     deallocate(element_dof_total)
     deallocate(local_nodes)
     deallocate(nodal_field_variables)
-
+!    write(6,*) ' Exit field projection'
 
 end subroutine assemble_field_projection

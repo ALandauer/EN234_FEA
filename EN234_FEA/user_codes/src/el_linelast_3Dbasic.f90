@@ -90,7 +90,7 @@ subroutine el_linelast_3dbasic(lmn, element_identifier, n_nodes, node_property_l
     element_residual = 0.d0
     element_stiffness = 0.d0
 	
-	stress = 0.d0
+    stress = 0.d0
     D = 0.d0
 
     if (element_identifier == 1001) then
@@ -121,6 +121,7 @@ subroutine el_linelast_3dbasic(lmn, element_identifier, n_nodes, node_property_l
 
                 call calc_S_and_D(n_properties,element_properties,length_coord_array, &         ! Input variables
                     dof_increment, dof_total, length_dof_array,D,stress,strain,dstrain)
+
             else
                 !                strain = matmul(B,dof_total)
                 !                dstrain = matmul(B,dof_increment)
@@ -204,9 +205,8 @@ subroutine el_linelast_3dbasic(lmn, element_identifier, n_nodes, node_property_l
 
             if (size(element_properties) .eq. 4) then
 
-                call calc_S_and_D(lmn, element_identifier, n_nodes, &  ! Input variables
-                    n_properties,element_properties,length_coord_array, &         ! Input variables
-                    dof_increment, dof_total, length_dof_array,D,stress,dstress,strain,dstrain)
+                call calc_S_and_D(n_properties,element_properties,length_coord_array, &         ! Input variables
+                    dof_increment, dof_total, length_dof_array,D,stress,strain,dstrain)
             else
                 !                strain = matmul(B,dof_total)
                 !                dstrain = matmul(B,dof_increment)
@@ -300,7 +300,7 @@ subroutine el_linelast_3dbasic_dynamic(lmn, element_identifier, n_nodes, node_pr
     real (prec)  :: deltaL(3,3),delR(3,3),delR_inv(3,3),del_eps(3,3),del_W(3,3),del_L_bar(3,3)
     real (prec)  :: eta,el_vol,del_eta,detR,el_vol_bar,fF,Vf
 
-
+!write(6,*)dof_increment
     x = reshape(element_coords,(/3,length_coord_array/3/))
     dof_i_reshape = reshape(dof_increment,(/3,length_dof_array/3/))
     dof_t_reshape = reshape(dof_total,(/3,length_dof_array/3/))
@@ -336,7 +336,8 @@ subroutine el_linelast_3dbasic_dynamic(lmn, element_identifier, n_nodes, node_pr
     dNbardy = 0.d0
 
     el_vol_bar = 0.d0
-    dNbardx = 0.d0
+!    dNbardx = 0.d0
+
     do intvol = 1,n_points
         call calculate_shapefunctions(xi(1:3,intvol),n_nodes,N,dNdxi)
         dxdxi = matmul(x(1:3,1:n_nodes),dNdxi(1:n_nodes,1:3))
@@ -346,7 +347,10 @@ subroutine el_linelast_3dbasic_dynamic(lmn, element_identifier, n_nodes, node_pr
         el_vol_bar = el_vol_bar + w(intvol)*determinant
         dNbardx(1:n_nodes,1:3) = dNbardx(1:n_nodes,1:3) + dNdx(1:n_nodes,1:3)*w(intvol)*determinant
     end do
-
+!write(6,*) 'dNbardx'
+!write(6,*) dNbardx
+!write(6,*) 'el_vol_bar'
+!write(6,*) el_vol_bar
     !     --  Loop over integration points
     do kint = 1, n_points
         call calculate_shapefunctions(xi(1:3,kint),n_nodes,N,dNdxi)
@@ -360,13 +364,13 @@ subroutine el_linelast_3dbasic_dynamic(lmn, element_identifier, n_nodes, node_pr
         deltaF = matmul(dNdx(1:n_nodes,1:3),dof_i_reshape(1:3,1:n_nodes))
         midF = d_ij + matmul(dNdx(1:n_nodes,1:3),dof_t_reshape(1:3,1:n_nodes)+0.5*dof_i_reshape(1:3,1:n_nodes))
 
-        !write(6,*) midF
+!write(6,*) midF
 
         call invert_small(midF,midF_inv,detF)
 
         deltaL = matmul(deltaF,midF_inv)
-
-        !write(6,*) detF
+!write(6,*) dof_i_reshape
+!write(6,*) deltaF
 
         el_vol = el_vol + w(kint)*determinant
         eta = eta + detF*w(kint)*determinant
@@ -404,15 +408,17 @@ subroutine el_linelast_3dbasic_dynamic(lmn, element_identifier, n_nodes, node_pr
         call invert_small(midF,midF_inv,detF)
 !write(6,*) detF
 
-
+        del_L_bar = matmul(deltaF,midF_inv)+(del_eta - matmul(deltaF,midF_inv))*d_ij/3.d0
         do i = 1,3
             do j = 1,3
-                del_L_bar(i,j) = deltaF(i,j)*midF_inv(i,j) + (del_eta - deltaF(i,j)*midF_inv(i,j)*d_ij(i,j))/3.d0
+!                del_L_bar(i,j) = deltaF(i,j)*midF_inv(i,j) + (del_eta - deltaF(i,j)*midF_inv(i,j)*d_ij(i,j))/3.d0
                 del_eps(i,j) = del_L_bar(i,j)/2.d0 + del_L_bar(j,i)/2.d0
                 del_W(i,j) = del_L_bar(i,j)/2.d0 - del_L_bar(j,i)/2.d0
 
             end do
         end do
+
+
 
         delR_inv_temp = d_ij - del_W/2.d0
 !write(6,*) delR_inv
@@ -420,6 +426,7 @@ subroutine el_linelast_3dbasic_dynamic(lmn, element_identifier, n_nodes, node_pr
         call invert_small(delR_inv_temp,delR_inv,detR)
 
         delR(1:3,1:3) = matmul(delR_inv(1:3,1:3),(d_ij(1:3,1:3)+del_W(1:3,1:3)/2.d0))
+
 
         dNdy(1:n_nodes,1:3) = matmul(dNdx(1:n_nodes,1:3),midF_inv(1:3,1:3))
         dNbardy(1:n_nodes,1:3) = matmul(dNbardx(1:n_nodes,1:3),midF_inv(1:3,1:3))
@@ -455,9 +462,9 @@ subroutine el_linelast_3dbasic_dynamic(lmn, element_identifier, n_nodes, node_pr
 
         element_residual = element_residual - matmul(transpose(B),stress)*w(kint)*determinant
 
-
     end do
 
+write(6,*) stress
     fF = element_properties(13)
     Vf = updated_state_variables(8)
 
@@ -593,6 +600,8 @@ subroutine fieldvars_linelast_3dbasic(lmn, element_identifier, n_nodes, node_pro
   
     if (element_identifier == 1001) then
 
+!       write(6,*) ' Entered fieldvars'
+
         !     --  Loop over integration points
         do kint = 1, n_points
             call calculate_shapefunctions(xi(1:3,kint),n_nodes,N,dNdxi)
@@ -617,11 +626,11 @@ subroutine fieldvars_linelast_3dbasic(lmn, element_identifier, n_nodes, node_pro
             !            write(6,*) strain,dstrain
 
             if (size(element_properties) .eq. 4) then
-
-                call calc_S_and_D(lmn, element_identifier, n_nodes, &  ! Input variables
-                    n_properties,element_properties,length_coord_array, &         ! Input variables
-                    dof_increment, dof_total, length_dof_array,D,stress,dstress,strain,dstrain)
-
+!                         write(6,*) ' Calculating stress and D'
+                call calc_S_and_D(n_properties,element_properties,length_coord_array, &         ! Input variables
+                    dof_increment, dof_total, length_dof_array,D,stress,strain,dstrain)
+! write(6,*) stress
+!               stress = 0.d0
             else
 
                 stress = matmul(D,strain+dstrain)
@@ -671,8 +680,11 @@ subroutine fieldvars_linelast_3dbasic(lmn, element_identifier, n_nodes, node_pro
                 !                nodal_fieldvariables(k,1:n_nodes) = nodal_fieldvariables(k,1:n_nodes) + (strain(6)+dstrain(6))/2
                 endif
             end do
+!            write(6,*) ' Field vars completed'
         end do
 
+!        write(6,*) 'Returning '
+        return
     elseif (element_identifier == 1002) then
         ! For B_bar elements
         el_vol = 0.d0
@@ -734,9 +746,8 @@ subroutine fieldvars_linelast_3dbasic(lmn, element_identifier, n_nodes, node_pro
 
             if (size(element_properties) .eq. 4) then
 
-                call calc_S_and_D(lmn, element_identifier, n_nodes, &  ! Input variables
-                    n_properties,element_properties,length_coord_array, &         ! Input variables
-                    dof_increment, dof_total, length_dof_array,D,stress,dstress,strain,dstrain)
+                call calc_S_and_D(n_properties,element_properties,length_coord_array, &         ! Input variables
+                    dof_increment, dof_total, length_dof_array,D,stress,strain,dstrain)
             else
                 !                strain = matmul(B,dof_total)
                 !                dstrain = matmul(B,dof_increment)
@@ -810,7 +821,10 @@ subroutine fieldvars_linelast_3dbasic(lmn, element_identifier, n_nodes, node_pro
         el_vol_bar = el_vol_bar + w(intvol)*determinant
         dNbardx(1:n_nodes,1:3) = dNbardx(1:n_nodes,1:3) + dNdx(1:n_nodes,1:3)*w(intvol)*determinant
     end do
-
+!write(6,*) 'dNbardx'
+!write(6,*) dNbardx
+!write(6,*) 'el_vol_bar'
+!write(6,*) el_vol_bar
     !     --  Loop over integration points
     do kint = 1, n_points
         call calculate_shapefunctions(xi(1:3,kint),n_nodes,N,dNdxi)
@@ -824,13 +838,13 @@ subroutine fieldvars_linelast_3dbasic(lmn, element_identifier, n_nodes, node_pro
         deltaF = matmul(dNdx(1:n_nodes,1:3),dof_i_reshape(1:3,1:n_nodes))
         midF = d_ij + matmul(dNdx(1:n_nodes,1:3),dof_t_reshape(1:3,1:n_nodes)+0.5*dof_i_reshape(1:3,1:n_nodes))
 
-        !write(6,*) midF
+!write(6,*) midF
 
         call invert_small(midF,midF_inv,detF)
 
         deltaL = matmul(deltaF,midF_inv)
-
-        !write(6,*) detF
+!write(6,*) dof_i_reshape
+!write(6,*) deltaF
 
         el_vol = el_vol + w(kint)*determinant
         eta = eta + detF*w(kint)*determinant
@@ -868,15 +882,17 @@ subroutine fieldvars_linelast_3dbasic(lmn, element_identifier, n_nodes, node_pro
         call invert_small(midF,midF_inv,detF)
 !write(6,*) detF
 
-
+        del_L_bar = matmul(deltaF,midF_inv)+(del_eta - matmul(deltaF,midF_inv))*d_ij/3.d0
         do i = 1,3
             do j = 1,3
-                del_L_bar(i,j) = deltaF(i,j)*midF_inv(i,j) + (del_eta - deltaF(i,j)*midF_inv(i,j)*d_ij(i,j))/3.d0
+!                del_L_bar(i,j) = deltaF(i,j)*midF_inv(i,j) + (del_eta - deltaF(i,j)*midF_inv(i,j)*d_ij(i,j))/3.d0
                 del_eps(i,j) = del_L_bar(i,j)/2.d0 + del_L_bar(j,i)/2.d0
                 del_W(i,j) = del_L_bar(i,j)/2.d0 - del_L_bar(j,i)/2.d0
 
             end do
         end do
+
+
 
         delR_inv_temp = d_ij - del_W/2.d0
 !write(6,*) delR_inv
@@ -884,6 +900,7 @@ subroutine fieldvars_linelast_3dbasic(lmn, element_identifier, n_nodes, node_pro
         call invert_small(delR_inv_temp,delR_inv,detR)
 
         delR(1:3,1:3) = matmul(delR_inv(1:3,1:3),(d_ij(1:3,1:3)+del_W(1:3,1:3)/2.d0))
+
 
         dNdy(1:n_nodes,1:3) = matmul(dNdx(1:n_nodes,1:3),midF_inv(1:3,1:3))
         dNbardy(1:n_nodes,1:3) = matmul(dNbardx(1:n_nodes,1:3),midF_inv(1:3,1:3))
@@ -964,10 +981,7 @@ end subroutine fieldvars_linelast_3dbasic
 
 
 subroutine calc_S_and_D(n_properties,element_properties,length_coord_array, &         ! Input variables
-    dof_increment, dof_total, length_dof_array,D,stress,strain,dstrain)!,  & ! Input variables
-    !    n_state_variables, initial_state_variables,updated_state_variables, &        ! Input variables
-    !    n_field_variables,field_variable_names, &                                    ! Field variable definition
-    !    nodal_fieldvariables)      ! Output variables
+                    dof_increment, dof_total, length_dof_array,D,stress,strain,dstrain)
 
     use Types
     use ParamIO
@@ -975,9 +989,9 @@ subroutine calc_S_and_D(n_properties,element_properties,length_coord_array, &   
 
     implicit none
 
-    !    integer, intent( in )         :: lmn                                                    ! Element number
-    !    integer, intent( in )         :: element_identifier                                     ! Flag identifying element type (specified in .in file)
-    !    integer, intent( in )         :: n_nodes                                                ! # nodes on the element
+!    integer, intent( in )         :: lmn                                                    ! Element number
+!    integer, intent( in )         :: element_identifier                                     ! Flag identifying element type (specified in .in file)
+!    integer, intent( in )         :: n_nodes                                                ! # nodes on the element
     integer, intent( in )         :: n_properties                                           ! # properties for the element
     integer, intent( in )         :: length_coord_array                                     ! Total # coords
     integer, intent( in )         :: length_dof_array                                       ! Total # DOF
@@ -1001,26 +1015,25 @@ subroutine calc_S_and_D(n_properties,element_properties,length_coord_array, &   
     real( prec ), intent( in )    :: dof_total(length_dof_array)                            ! accumulated DOF, same storage as for increment
 
     real( prec ), intent( in )    :: element_properties(n_properties)                       ! Element or material properties, stored in order listed in input file
-    !    real( prec ), intent( in )    :: initial_state_variables(n_state_variables)             ! Element state variables.  Defined in this routine
-    !    real( prec ), intent( in )    :: updated_state_variables(n_state_variables)             ! State variables at end of time step
+!        real( prec ), intent( in )    :: initial_state_variables(n_state_variables)             ! Element state variables.  Defined in this routine
+!        real( prec ), intent( in )    :: updated_state_variables(n_state_variables)             ! State variables at end of time step
     real( prec ), intent( in )    :: strain(6)             ! total strain
     real( prec ), intent( inout ) :: stress(6)
     real( prec ), intent( in )    :: dstrain(6)            ! step of strain
-    !    real( prec ), intent( in )    :: dstress(6)           ! step of stress
+!        real( prec ), intent( in )    :: dstress(6)           ! step of stress
     !    real( prec ), intent( out )   :: nodal_fieldvariables(n_field_variables,n_nodes)        ! Nodal field variables
-    !   real( prec ), intent( inout ) :: D
 
     ! Local Variables
     real (prec), dimension(6,6)  ::  D1(6,6)
     real (prec), dimension(6,6)  ::  D2(6,6)
     !    real (prec)  ::  total_strain(6)
-    real (prec)  ::  e_dyadic_e(6,6)
+    real (prec)  ::  e_dyadic_e(6,6),e_mat(6,6)
     real (prec)  ::  e(6),e_05(6)!,deps(6)!,deps_e,de_05(6),de(6)
     real (prec)  ::  eps(6),eps_05(6)!,deps_05(6)
-    real (prec), intent(out) ::  D(6,6)
+    real (prec), intent(inout) ::  D(6,6)
     real (prec)  ::  K,E_s,E_t,eps_e,sum_strain,stress_e,stress_0,n,dstress_e,&
         dstrain_e,strain_0
-    !    integer :: ij
+    integer :: i,j
 
     D1 = 0.d0
     D1(1,1) = 2.d0
@@ -1077,8 +1090,26 @@ subroutine calc_S_and_D(n_properties,element_properties,length_coord_array, &   
     e = e_05
     sum_strain = sqrt(sum(eps**2.d0))
 
-    eps_e = sqrt(2.d0/3.d0*(e(1)**2.d0+e(2)**2.d0+e(3)**2.d0+2.d0*e(4)**2.d0+&
-        2.d0*e(5)**2.d0+2.d0*e(6)**2.d0))
+    e_mat(1,1) = e(1)
+    e_mat(2,2) = e(2)
+    e_mat(3,3) = e(3)
+    e_mat(1,2) = e(4)
+    e_mat(2,1) = e_mat(1,2)
+    e_mat(1,3) = e(5)
+    e_mat(3,1) = e_mat(1,3)
+    e_mat(2,3) = e(6)
+    e_mat(3,2) = e_mat(2,3)
+
+
+    do i = 1,3
+        do j = 1,3
+            eps_e = eps_e + e_mat(i,j)*e_mat(i,j)
+        end do
+    end do
+    eps_e = sqrt(2.d0/3.d0*eps_e)
+
+    !sqrt(2.d0/3.d0*(e(1)**2.d0+e(2)**2.d0+e(3)**2.d0))!+2.d0*e(4)**2.d0+&
+!        2.d0*e(5)**2.d0+2.d0*e(6)**2.d0))
 
     !write(6,*) deps_e
 
@@ -1101,13 +1132,7 @@ subroutine calc_S_and_D(n_properties,element_properties,length_coord_array, &   
     end if
     !write(6,*) stress_e!,dstress_e
 
-    !stress vector
-    stress(1) = 2.d0/3.d0*stress_e*e(1)/eps_e + K*(eps(1)+eps(2)+eps(3))
-    stress(2) = 2.d0/3.d0*stress_e*e(2)/eps_e + K*(eps(1)+eps(2)+eps(3))
-    stress(3) = 2.d0/3.d0*stress_e*e(3)/eps_e + K*(eps(1)+eps(2)+eps(3))
-    stress(4) = 2.d0/3.d0*stress_e*e(4)/eps_e
-    stress(5) = 2.d0/3.d0*stress_e*e(5)/eps_e
-    stress(6) = 2.d0/3.d0*stress_e*e(6)/eps_e
+
 !write(6,*) stress!,dstress_e
 
     !check for the zero strain case
@@ -1123,6 +1148,14 @@ subroutine calc_S_and_D(n_properties,element_properties,length_coord_array, &   
     else
         E_s = stress_e/eps_e
         E_t = dstress_e
+
+        !stress vector
+        stress(1) = 2.d0/3.d0*stress_e*e(1)/eps_e + K*(eps(1)+eps(2)+eps(3))
+        stress(2) = 2.d0/3.d0*stress_e*e(2)/eps_e + K*(eps(1)+eps(2)+eps(3))
+        stress(3) = 2.d0/3.d0*stress_e*e(3)/eps_e + K*(eps(1)+eps(2)+eps(3))
+        stress(4) = 2.d0/3.d0*stress_e*e(4)/eps_e
+        stress(5) = 2.d0/3.d0*stress_e*e(5)/eps_e
+        stress(6) = 2.d0/3.d0*stress_e*e(6)/eps_e
 
         !calculate D matrix
         D(1:6,1:6) = 4.d0/(9.d0*eps_e*eps_e)*(E_t - E_s)*e_dyadic_e + E_s/3.d0*D1(1:6,1:6)+&
@@ -1180,8 +1213,9 @@ subroutine gurson(element_properties,n_properties,n_state_variables,initial_stat
     Vf = initial_state_variables(8)
 
     taun = 0.d0
-
     stressR = 0.d0
+
+
     taun(1,1) = stress0(1)
     taun(2,2) = stress0(2)
     taun(3,3) = stress0(3)
@@ -1205,7 +1239,8 @@ subroutine gurson(element_properties,n_properties,n_state_variables,initial_stat
 
     fF_bar = q1 + sqrt(q1**2 - q3)/q3
 
-    p_star = 1.d0/3.d0*sum(taun) + E/(2*(1-2*nu))*sum(dstrain)
+    p_star = 1.d0/3.d0*(taun(1,1)+taun(2,2)+taun(3,3))+&
+        E/(3*(1-2*nu))*(dstrain(1,1)+dstrain(2,2)+dstrain(3,3))
 
     if (Vf < fc) then
         f_star = Vf
@@ -1226,25 +1261,27 @@ subroutine gurson(element_properties,n_properties,n_state_variables,initial_stat
     do i = 1,3
         do j = 1,3
 
+            tauDn(i,j) = taun(i,j) - (taun(1,1)+taun(2,2)+taun(3,3))/3.d0
             if (i==j) then
-                tauDn(i,j) = taun(i,j) - 1.d0/3.d0*sum(stress1(1:3))
+
                 de(i,j) = dstrain(i,j) - (dstrain(1,1)+dstrain(2,2)+dstrain(3,3))/3.d0
             else
-                tauDn(i,j) = taun(i,j)
+!                tauDn(i,j) = taun(i,j)
                 de(i,j) = dstrain(i,j)
             end if
 
-            Ss(i,j) = tauDn(i,j) + E*de(i,j)/(1+nu)+ stressR33(i,j)
+            Ss(i,j) = E*de(i,j)/(1+nu)+ stressR33(i,j)!+tauDn(i,j)
 
             Se_star = Se_star + sqrt(3.d0*Ss(i,j)*Ss(i,j)/2.d0)
 
         end do
     end do
 
-    phi = sqrt((Se_star**2.d0)/(Y**2.d0) + 2.d0*q1*f_star*cosh(3.d0/2.d0*q2*p_star/Y) - (1.d0+q3*f_star**2.d0))
+    phi = sqrt((Se_star**2.d0)/(Y**2.d0) + 2.d0*q1*f_star*cosh(3.d0/2.d0*q2*p_star/Y) -&
+      (1.d0+q3*f_star**2.d0))
 
 
-    if (phi < 0.00000001) then
+    if (phi < 0.0000001) then
         do i = 1,3
             do j = 1,3
                 if (i==j) then
@@ -1264,9 +1301,10 @@ subroutine gurson(element_properties,n_properties,n_state_variables,initial_stat
         do i = 1,3
             do j = 1,3
                 if (i==j) then
-                    taun1(i,j) = Ss(i,j) + dee*E*3.d0*Ss(i,j)/((1.d0+nu)*2.d0*Se_star)+p_star-E*dev/(3.d0*(1.d0-2.d0*nu))
+                    taun1(i,j) = Ss(i,j) - dee*E*3.d0*Ss(i,j)/((1.d0+nu)*2.d0*Se_star)+&
+                       p_star-E*dev/(3.d0*(1.d0-2.d0*nu))
                 else
-                    taun1(i,j) = Ss(i,j) + dee*E*3.d0*Ss(i,j)/((1.d0+nu)*2.d0*Se_star)
+                    taun1(i,j) = Ss(i,j) - dee*E*3.d0*Ss(i,j)/((1.d0+nu)*2.d0*Se_star)
                 end if
 
             end do
@@ -1275,7 +1313,6 @@ subroutine gurson(element_properties,n_properties,n_state_variables,initial_stat
         Se = Se_star+3.d0/2.d0*E/(1+nu)*dee
         p = p_star+1.d0/2.d0*E/(1-2.d0*nu)*dev
 
-
     end if
 
     dphidSe = (2.d0*Se_star/(Y**2.d0)-3.d0*E*dee/((Y**2.d0)*(1.d0+nu)))/(sqrt((Se**2.d0)/(Y**2.d0) +&
@@ -1283,7 +1320,7 @@ subroutine gurson(element_properties,n_properties,n_state_variables,initial_stat
     dphidp = 3.d0*q1*q2*f_star/Y*sinh(3*q2/(2.d0*Y)*(p-E*dev/(3.d0*(1.d0-2.d0*nu))))/(sqrt((Se**2.d0)/(Y**2.d0) +&
         2.d0*q1*f_star*cosh(3.d0/2.d0*q2/Y*(p-E*dev/(3.d0*(1.d0-2.d0*nu))))))
 
-    if (phi < 0.00000001) then
+    if (phi > 0.00000001) then
         deps_barmat = e_dot*DTIME/(1.d0-Vf)*phi**m/(sqrt((dphidSe)**2.d0+2.d0/9.d0*(dphidp)**2.d0))*&
             (dphidSe*Se+1.d0/3.d0*dphidp*p)
         Vf1 = 1.d0 + (Vf-1)*exp(-dev)+fN*deps_barmat/(sN*sqrt(2.d0*pi))*exp(-1.d0/2.d0*((ematrix-eN)/sN)**2.d0)
@@ -1306,8 +1343,6 @@ subroutine gurson(element_properties,n_properties,n_state_variables,initial_stat
     updated_state_variables(1:6) = stress1(1:6)
     updated_state_variables(7) = eN1matrix
     updated_state_variables(8) = Vf1
-
-
 
 
     return
@@ -1407,7 +1442,7 @@ subroutine NewtonLoopF(E,nu,Y,e_dot,m,q1,q2,q3,fN,eN,sN,fc,fF,f_star,Se_star,p_s
         Jac(1,2) = dF1ddev
         Jac(2,1) = dF2ddee
         Jac(2,2) = dF2ddev
-write(6,*) Jac
+!write(6,*) Jac
         call invert_small(Jac,Jac_inv,det_)
 
         J_invF(1:2) = matmul(Jac_inv,F_col)
@@ -1418,6 +1453,7 @@ write(6,*) Jac
 
         if (sum(J_invF**2) < thresh) then
             convrg = .true.
+write(6,*) 'NR Loop Converged'
         end if
 
     end do

@@ -38,6 +38,7 @@ subroutine compute_static_step
         call allocate_direct_stiffness
 
         do while (continue_timesteps)
+!             write(6,*) ' Assembling stiffness'
             call assemble_direct_stiffness(fail)
 
             if (fail) then                          ! Force a timestep cutback if stiffness computation fails
